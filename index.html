@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Разделитель временных интервалов</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --primary-color: #ffcc00;
+            --secondary-color: #ccff00;
+            --border-color: #333;
+            --focus-color: #ccff0055;
+            --day-divider: #ccff0033;
+            --input-group-bg: #252525;
+            --row-hover: #0a0a0a;
+            --toast-success: #4caf50;
+            --toast-error: #f44336;
+            --toast-info: #2196f3;
+
+            --extra-color-1: #0fc;
+            --extra-color-2: #cf0;
+        }
+
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        *::selection,
+        *::-moz-selection{
+            background-color: var(--primary-color) !important;
+            color: #fff !important;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .extra-input-container{
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            position: relative;
+        }
+        
+        .input-block {
+            flex: 1;
+            min-width: 250px;
+            background-color: var(--input-group-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .input-block h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .date-input, .time-input {
+            margin-bottom: 20px;
+        }
+        
+        .control-input {
+            width: 100%;
+            background: var(--input-group-bg);
+            padding: 10px;
+            border-radius: 12px;
+            max-width: 210px;
+            width: fit-content;
+            box-shadow: 0 2px 4px #0003;
+
+            &:has(#orderTitle){
+                min-width: 385px;
+            }
+
+            #max-interval{
+                width: 2ch;
+                text-align: center;
+            }
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+        
+        input[type="date"], input[type="time"], input[type="number"], input[type="text"] {
+            width: -webkit-fill-available;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #2d2d2d;
+            color: var(--text-color);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.8;
+        }
+        
+        input[type="date"]:focus,
+        input[type="time"]:focus,
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px var(--focus-color);
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            background-color: #dbaf00;
+        }
+        
+        .copy-btn {            
+            background-color: var(--secondary-color);
+            color: #000;
+        }
+        
+        .copy-btn:hover {
+            background-color: #a7d100;
+        }
+
+        .download-btn {
+            background-color: var(--secondary-color);
+            color: #000;
+
+            &:hover{
+                background-color: var(--secondary-color);
+            }
+        }
+        
+        .results {
+            margin-top: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: #2a2a2a;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        tr.day-start {
+            background-color: var(--day-divider);
+            font-weight: bold;
+        }
+        
+        tr.day-start td {
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--secondary-color);
+            border-top: 2px solid var(--secondary-color);
+        }
+        
+        tr:not(.day-start):hover {
+            background-color: var(--row-hover);
+        }
+        
+        .part-number {
+            font-weight: bold;
+            color: var(--primary-color);
+            height: 100%;
+        }
+
+        .part-number div{
+            display: flex;
+            text-align: center;
+            width: 30px;
+            height: 30px;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: #000;
+            font-weight: 800;
+            outline: 1px solid #82a300;
+            box-shadow: 0px 0px 10px 0px var(--secondary-color);
+            left: 50%;
+            position: relative;
+            transform: translateX(-50%);
+        }
+        
+        .error {
+            color: #ff6b6b;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .duration-info {
+            margin-bottom: 25px;
+            padding: 18px;
+            background-color: #252525;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .duration-info p {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background-color: #333;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .toast.success { background-color: var(--toast-success); }
+        .toast.error { background-color: var(--toast-error); }
+        .toast.info { background-color: var(--toast-info); }
+        
+        .toast i { font-size: 20px; }
+
+        .edit-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        
+        .edit-btn:hover {
+            color: var(--primary-color);
+            transform: scale(1.2);
+        }
+        
+        .edit-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .edit-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .edit-content {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .edit-title {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .edit-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+        
+        .edit-block {
+            flex: 1;
+            background-color: var(--input-group-bg);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .edit-block h4 {
+            color: var(--secondary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .edit-input-group { margin-bottom: 20px; }
+        
+        .edit-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .edit-actions button {
+            width: auto;
+            min-width: 150px;
+            margin-top: 0;
+        }
+        
+        .edit-warning {
+            color: #ff9800;
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .highlight-original { background-color: #ccff0026 !important; }
+        .highlight-new { background-color: #ffcc0026 !important; }
+
+        .split-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            margin: 0;
+            width: fit-content;
+            i{ transform: rotateX(180deg) !important; }
+        }
+
+        .split-btn:hover {
+            background: var(--secondary-color);
+            color: #000;
+            transform: scale(1.2);
+        }
+
+        /* ===== Кнопка "Выгрузка через" ===== */
+        .export-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 16px 20px;
+            margin: 0;
+            width: fit-content;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: content-box;
+        }
+
+        .export-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.2);
+        }
+
+        .export-btn img {
+            width: 20px;
+            height: 20px;
+            display: block;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        #original-end {
+            background-color: #2d2d2d !important;
+            color: var(--text-color) !important;
+            cursor: text !important;
+        }
+
+        .control-block {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: none;
+        }
+
+        h2.title{
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            flex-flow: column;
+            margin: 0;
+            margin-bottom: 30px;
+            background: var(--bg-color);
+            width: fit-content;
+            padding: 20px;
+            border-radius: 20px;
+            left: 50%;
+            position: relative;
+            transform: translateX(-50%);
+            span.orderData{
+                font-size: 2rem;
+                padding: 0px 10px;
+            }
+        }
+        
+        .control-block h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .control-fields {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .control-field { min-width: 200px; }
+        
+        select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #2d2d2d;
+            color: var(--text-color);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--focus-color);
+        }
+        
+        th:nth-child(5), td:nth-child(5) { width: 150px; }
+        th:nth-child(6), td:nth-child(6) { width: 120px; }
+        th:nth-child(7), td:nth-child(7) { width: 60px; }
+        th:nth-child(8), td:nth-child(8) { width: 70px; }
+
+        .add-interval-btn {
+            background-color: #0fc;
+            color: #000;
+            width: 100%;
+            min-width: 200px;
+            &:hover{ background-color: #0fc; }
+        }
+
+        .add-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .add-modal.show { opacity: 1; visibility: visible; }
+
+        .add-content {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 25px;
+            width: fit-content;
+        }
+
+        .add-title {
+            color: var(--extra-color-1);
+            margin-top: 0;
+            font-size: 2rem;
+            margin-bottom: 25px;
+            text-align: center;
+            filter: drop-shadow(0px 0px 4px #000) drop-shadow(0px 0px 4px #000) drop-shadow(0px 0px 4px #000);
+        }
+
+        .add-input-wrapper{
+            display: flex;
+            gap: 32px;
+            width: 100%;
+            #cancel-add{ background: var(--extra-color-1); }
+        }
+        .add-input-section{
+            padding: 20px;
+            border-radius: 20px;
+            background: var(--bg-color);
+            box-shadow: 0px 0px 10px 4px #000;
+            label{ color: var(--extra-color-1); }
+            input{ min-width: 200px; }
+            input:focus{
+                outline: none;
+                border-color: var(--extra-color-1);
+                box-shadow: 0 0 0 3px #00ffcc55;
+            }
+        }
+
+        .add-input-group { margin-bottom: 20px; }
+
+        .add-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 50px;
+        }
+
+        .add-actions button {
+            width: auto;
+            min-width: 120px;
+            margin-top: 0;
+        }
+
+        .key-btn {
+            background-color: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: auto;
+            min-width: 180px;
+        }
+
+        .key-btn:hover { background-color: #dbaf00; }
+
+        .control-buttons-all{
+            display: flex;
+            position: fixed;
+            right: 10px;
+            min-width: 290px;
+            flex-flow: column;
+            margin: 0px;
+            background: var(--card-color);
+            padding: 20px;
+            box-sizing: border-box;
+            top: 140px;
+            border-radius: 12px;
+            gap: 20px;
+            box-shadow: 0 4px 6px #0000004d;
+        }
+
+        .control-buttons-section{
+            margin: 0;
+            padding: 10px;
+            background: var(--input-group-bg);
+            border-radius: 10px;
+            gap: 10px;
+            display: flex;
+            justify-content: center;
+            flex-flow: column;
+            box-shadow: 0 2px 4px #0003;
+            h1{ font-size: 1rem; margin: 0; }
+        }
+        .control-buttons-section:nth-child(1){ h1{ color: #fc0; } }
+        .control-buttons-section:nth-child(2){ h1{ color: #0fc; } }
+        .control-buttons-section:nth-child(3){ h1{ color: #cf0; } }
+
+        .control-buttons-wrapper{
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .control-buttons-wrapper button{
+            font-size: .65rem;
+            padding: 12px 18px;
+            min-width: unset;
+            width: fit-content;
+            margin: 0;
+            &:hover{ filter: brightness(.92); }
+            &:active{ filter: brightness(.88); transform: scale(.98); }
+        }
+
+        .control-buttons{ display: flex; flex-flow: column; }
+
+        #calculate-btn{
+            width: fit-content;
+            margin: 0;
+            position: absolute;
+            right: 0;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Разделитель временных интервалов</h1>
+        
+        <div class="card">
+
+            <div class="input-container">
+                <div class="input-block">
+                    <h3>Начало</h3>
+                    <div class="date-input">
+                        <label for="start-date">Дата</label>
+                        <input type="date" id="start-date">
+                    </div>
+                    <div class="time-input">
+                        <label for="start-time">Время</label>
+                        <input type="time" id="start-time" step="1" value="00:00:00">
+                    </div>
+                </div>
+                
+                <div class="input-block">
+                    <h3>Окончание</h3>
+                    <div class="date-input">
+                        <label for="end-date">Дата</label>
+                        <input type="date" id="end-date">
+                    </div>
+                    <div class="time-input">
+                        <label for="end-time">Время</label>
+                        <input type="time" id="end-time" step="1" value="23:59:59">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="extra-input-container">
+                <div class="control-input">
+                    <label for="orderTitle">Номер заказа:</label>
+                    <input type="text" id="orderTitle" placeholder="Номер заказа">
+                </div>
+                
+                <div class="control-input">
+                    <label for="max-interval">Интервал</label>
+                    <input type="number" id="max-interval" min="1" max="24" value="4">
+                </div>
+
+                <button id="calculate-btn">
+                    <i class="fas fa-calculator"></i> Рассчитать интервалы
+                </button>
+            </div>
+
+            <div id="error-message" class="error"></div>
+        </div>
+
+        <div class="control-block" id="control-block">
+            <h2>Контроль камер</h2>
+            <div class="control-fields">
+                <div class="control-field">
+                    <label for="global-recorder">Регистратор:</label>
+                    <select id="global-recorder">
+                        <option value="">Выберите регистратор</option>
+                        <option value="Зал1">Зал1</option>
+                        <option value="Зал2">Зал2</option>
+                        <option value="Зал2-2">Зал2-2</option>
+                        <option value="Зал3-1">Зал3-1</option>
+                        <option value="Зал3-2">Зал3-2</option>
+                        <option value="Зал3-3">Зал3-3</option>
+                        <option value="Улица">Улица</option>
+                    </select>
+                </div>
+                
+                <div class="control-field">
+                    <label for="global-camera">Камера:</label>
+                    <select id="global-camera">
+                        <option value="">Выберите камеру</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="apply-all-btn" class="copy-btn">
+                <i class="fas fa-check"></i> Применить ко всем интервалам
+            </button>
+        </div>
+        
+        <div class="card results" id="results" style="display: none;">
+            <h2 class="title">Результаты выгрузки: <span class="orderData"></span></h2>
+            <div class="duration-info" id="duration-info"></div>
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th>Часть</th>
+                        <th>Начало</th>
+                        <th>Конец</th>
+                        <th>Длительность</th>
+                        <th>Регистратор</th>
+                        <th>Камера</th>
+                        <th>Разделение</th>
+                        <th>Выгрузка через</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body"></tbody>
+            </table>
+        </div>
+
+        <div class="edit-modal" id="edit-modal">
+            <div class="edit-content">
+                <h3 class="edit-title">Редактирование интервала</h3>
+                
+                <div class="edit-container">
+                    <div class="edit-block">
+                        <h4>Исходный интервал</h4>
+                        <div class="edit-input-group">
+                            <label for="original-start">Начало</label>
+                            <input type="time" id="original-start" step="1" disabled>
+                        </div>
+                        <div class="edit-input-group">
+                            <label for="original-end">Конец</label>
+                            <input type="time" id="original-end" step="1">
+                        </div>
+                    </div>
+                    
+                    <div class="edit-block">
+                        <h4>Новый интервал</h4>
+                        <div class="edit-input-group">
+                            <label for="new-start">Начало</label>
+                            <input type="time" id="new-start" step="1">
+                        </div>
+                        <div class="edit-input-group">
+                            <label for="new-end">Конец</label>
+                            <input type="time" id="new-end" step="1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="edit-warning">
+                    При изменении начала интервала он будет разделен на две части
+                </div>
+                
+                <div class="edit-actions">
+                    <button id="apply-edit" class="copy-btn">
+                        <i class="fas fa-check"></i> Применить
+                    </button>
+                    <button id="cancel-edit">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="add-modal" id="add-modal">
+            <div class="add-content">
+                <h3 class="add-title">Добавить новый интервал</h3>
+                
+                <div class="add-input-wrapper">
+                    <div class="add-input-section">
+                        <div class="add-input-group">
+                            <label for="add-start-date">Дата начала</label>
+                            <input type="date" id="add-start-date">
+                        </div>
+                        <div class="add-input-group">
+                            <label for="add-start-time">Время начала</label>
+                            <input type="time" id="add-start-time" step="1" value="00:00:00">
+                        </div>
+                    </div>
+                    
+                    <div class="add-input-section">
+                        <div class="add-input-group">
+                            <label for="add-end-date">Дата окончания</label>
+                            <input type="date" id="add-end-date">
+                        </div>
+                        <div class="add-input-group">
+                            <label for="add-end-time">Время окончания</label>
+                            <input type="time" id="add-end-time" step="1" value="23:59:59">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="add-actions">
+                    <button id="apply-add" class="copy-btn">
+                        <i class="fas fa-plus"></i> Добавить
+                    </button>
+                    <button id="cancel-add">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="control-buttons-all">
+
+        <div class="control-buttons-section">
+            <h1>Ключ таймингов</h1>
+            <div class="control-buttons-wrapper">
+                <button id="copy-key-btn" class="key-btn">
+                    <i class="far fa-copy"></i>Копировать
+                </button>
+                <button id="paste-key-btn" class="key-btn">
+                    <i class="fas fa-paste"></i>Вставить
+                </button>
+            </div>
+        </div>
+
+        <div class="control-buttons-section">
+            <h1>Добавить интервал</h1>
+            <div class="control-buttons-wrapper">
+                <button id="add-interval-btn" class="add-interval-btn">
+                    <i class="fas fa-plus"></i>Добавить
+                </button>
+            </div>
+        </div>
+
+        <div class="control-buttons-section">
+            <h1>Изображение таблицы</h1>
+            <div class="control-buttons-wrapper">
+                <button id="copy-btn" class="copy-btn">
+                    <i class="far fa-copy"></i>Копировать
+                </button>
+                <button id="download-btn" class="download-btn">
+                    <i class="fas fa-download"></i>Скачать
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="html2canvas.min.js"></script>
+    <script src="https://kit.fontawesome.com/ffceda30b6.js" crossorigin="anonymous"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    today.setSeconds(0, 0);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setSeconds(0, 0);
+    
+    document.getElementById('start-date').valueAsDate = today;
+    document.getElementById('end-date').valueAsDate = tomorrow;
+    
+    let dateCopied = false;
+    document.getElementById('start-date').addEventListener('change', function() {
+        if (!dateCopied && !document.getElementById('end-date').value) {
+            document.getElementById('end-date').valueAsDate = this.valueAsDate;
+            dateCopied = true;
+        }
+    });
+    
+    document.getElementById('calculate-btn').addEventListener('click', calculateIntervals);
+    document.getElementById('copy-btn').addEventListener('click', copyResultsAsImage);
+    document.getElementById('download-btn').addEventListener('click', downloadResultsAsImage);
+    document.getElementById('apply-edit').addEventListener('click', applyEdit);
+    document.getElementById('cancel-edit').addEventListener('click', closeEditModal);
+    document.getElementById('apply-all-btn').addEventListener('click', applyToAll);
+    
+    document.getElementById('edit-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+    
+    initCameras();
+});
+
+let currentIntervals = [];
+let editingIndex = -1;
+let currentDate = null;
+let globalStartDate = null;
+let globalEndDate = null;
+let customIntervalsCount = 0;
+
+// ============ РАБОТА С ИЗОБРАЖЕНИЯМИ ============
+async function downloadResultsAsImage() {
+    try {
+        const results = document.getElementById('results');
+        const canvas = await html2canvas(results, {
+            scale: 2,
+            backgroundColor: '#1e1e1e',
+            useCORS: true
+        });
+        const link = document.createElement('a');
+        link.download = `Тайминги выгрузок ${document.querySelector("span.orderData").innerText}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('Изображение успешно скачано!', 'success');
+    } catch (error) {
+        showToast('Ошибка создания изображения: ' + error.message, 'error');
+        console.error('Image creation error:', error);
+    }
+}
+
+async function copyResultsAsImage() {
+    try {
+        const results = document.getElementById('results');
+        const canvas = await html2canvas(results, {
+            scale: 2,
+            backgroundColor: '#1e1e1e',
+            useCORS: true
+        });
+        canvas.toBlob(async function(blob) {
+            try {
+                await navigator.clipboard.write([ new ClipboardItem({ 'image/png': blob }) ]);
+                showToast('Изображение скопировано в буфер обмена!', 'success');
+            } catch (err) {
+                showToast('Не удалось скопировать изображение', 'error');
+                console.error('Copy failed', err);
+            }
+        });
+    } catch (error) {
+        showToast('Ошибка создания изображения: ' + error.message, 'error');
+        console.error('Image creation error:', error);
+    }
+}
+
+// ============ КАМЕРЫ ============
+function initCameras() {
+    const cameraSelect = document.getElementById('global-camera');
+    cameraSelect.innerHTML = '<option value="">Выберите камеру</option>';
+    for (let i = 1; i <= 32; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        cameraSelect.appendChild(option);
+    }
+}
+
+function applyToAll() {
+    const recorder = document.getElementById('global-recorder').value;
+    const camera = document.getElementById('global-camera').value;
+    if (!recorder || !camera) {
+        showToast('Выберите регистратор и камеру', 'error');
+        return;
+    }
+    currentIntervals.forEach(interval => {
+        if (!interval.isDayStart) {
+            interval.recorder = recorder;
+            interval.camera = camera;
+        }
+    });
+    displayResults(globalStartDate, globalEndDate, currentIntervals);
+    showToast('Настройки применены ко всем интервалам', 'success');
+}
+
+// ============ TOAST ============
+function showToast(message, type = 'info', duration = 3000) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = 'fa-info-circle';
+    if (type === 'success') icon = 'fa-check-circle';
+    if (type === 'error') icon = 'fa-exclamation-circle';
+    toast.innerHTML = `<i class="fas ${icon}"></i>${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => { if (toast.parentNode) document.body.removeChild(toast); }, 300);
+    }, duration);
+}
+
+// ============ ВРЕМЯ ============
+// Конец дня = 23:59:59 (секунды сохраняем)
+function getEndOfDay(date) {
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 0);
+    return end;
+}
+
+// Начало следующего дня
+function getStartOfNextDay(date) {
+    const next = new Date(date);
+    next.setDate(next.getDate() + 1);
+    next.setHours(0, 0, 0, 0);
+    return next;
+}
+
+// Убираем ТОЛЬКО миллисекунды, секунды сохраняем
+function roundToSecond(date) {
+    const rounded = new Date(date);
+    rounded.setMilliseconds(0);
+    return rounded;
+}
+
+const startDateChanging = document.getElementById('start-date');
+startDateChanging.addEventListener("change", () => {
+    document.getElementById('end-date').value = document.getElementById('start-date').value;
+});
+
+// ============ РАСЧЁТ ИНТЕРВАЛОВ ============
+function calculateIntervals() {
+    if (document.getElementById('orderTitle') && document.getElementById('orderTitle').value === '') {
+        showToast('Укажите номер заказа', 'error');
+        return;
+    }
+    document.getElementById('error-message').textContent = '';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('control-block').style.display = 'none';
+    
+    const startDate = document.getElementById('start-date').value;
+    const startTime = document.getElementById('start-time').value;
+    const endDate = document.getElementById('end-date').value;
+    const endTime = document.getElementById('end-time').value;
+    const maxIntervalHours = parseInt(document.getElementById('max-interval').value);
+    const orderTitle = document.getElementById('orderTitle').value;
+    document.querySelector('.orderData').innerHTML = `${orderTitle}`;
+    
+    if (!startDate || !startTime || !endDate || !endTime) {
+        showToast('Заполните все поля даты и времени', 'error');
+        return;
+    }
+    if (isNaN(maxIntervalHours) || maxIntervalHours < 1 || maxIntervalHours > 24) {
+        showToast('Укажите корректный интервал (1-24 часа)', 'error');
+        return;
+    }
+    
+    const startDatetime = roundToSecond(new Date(`${startDate}T${startTime}`));
+    const endDatetime = roundToSecond(new Date(`${endDate}T${endTime}`));
+    
+    globalStartDate = startDatetime;
+    globalEndDate = endDatetime;
+    
+    if (endDatetime <= startDatetime) {
+        showToast('Дата окончания должна быть после даты начала', 'error');
+        return;
+    }
+    
+    try {
+        const intervals = [];
+        let current = new Date(startDatetime);
+        let partNumber = 1;
+        
+        intervals.push({ isDayStart: true, dayDate: new Date(startDatetime) });
+        customIntervalsCount = 0;
+        
+        const maxIntervalSeconds = maxIntervalHours * 3600;
+        
+        while (current < endDatetime) {
+            const endOfDay = getEndOfDay(current);
+            const dayEnd = endOfDay < endDatetime ? endOfDay : endDatetime;
+            const remainingDayTime = dayEnd - current;
+            
+            if (remainingDayTime <= 0) {
+                const nextDay = getStartOfNextDay(current);
+                intervals.push({ isDayStart: true, dayDate: new Date(nextDay) });
+                current = nextDay;
+                continue;
+            }
+            
+            // Работаем в целых секундах — без «плавающей» точности
+            const remainingSeconds = Math.floor(remainingDayTime / 1000);
+            const intervalsInDay = Math.max(1, Math.ceil(remainingSeconds / maxIntervalSeconds));
+            const baseSeconds = Math.floor(remainingSeconds / intervalsInDay);
+            
+            for (let i = 0; i < intervalsInDay; i++) {
+                const isLastInDay = (i === intervalsInDay - 1);
+                let end;
+                if (isLastInDay) {
+                    end = new Date(dayEnd);
+                } else {
+                    end = new Date(current.getTime() + baseSeconds * 1000);
+                }
+                end = roundToSecond(end);
+                
+                if (end - current > 0) {
+                    intervals.push({
+                        part: partNumber++,
+                        date: new Date(current),
+                        endDate: new Date(end),
+                        isDayStart: false,
+                        recorder: '',
+                        camera: '',
+                        exportVia: 'vesta'
+                    });
+                }
+                
+                current = end;
+                if (current >= endDatetime) break;
+            }
+            
+            if (current < endDatetime) {
+                const nextDay = getStartOfNextDay(current);
+                intervals.push({ isDayStart: true, dayDate: new Date(nextDay) });
+                current = nextDay;
+            }
+        }
+        
+        displayResults(startDatetime, endDatetime, intervals);
+        showToast('Интервалы успешно рассчитаны!', 'success');
+        
+    } catch (error) {
+        showToast(`Ошибка расчета: ${error.message}`, 'error');
+        console.error('Calculation error:', error);
+    }
+}
+
+// ============ ОТОБРАЖЕНИЕ ============
+function displayResults(startDate, endDate, intervals) {
+    currentIntervals = [...intervals];
+    
+    const allNonDayIntervals = intervals.filter(i => !i.isDayStart);
+    if (allNonDayIntervals.length > 0) {
+        const firstInterval = allNonDayIntervals[0].date;
+        const lastInterval = allNonDayIntervals[allNonDayIntervals.length - 1].endDate;
+        const totalDuration = lastInterval - firstInterval;
+        const durationStr = formatDuration(totalDuration);
+        const partsCount = allNonDayIntervals.length;
+        const partDuration = totalDuration / partsCount;
+        
+        document.getElementById('duration-info').innerHTML = `
+            <p><strong>Общая длительность:</strong> ${durationStr}</p>
+            <p><strong>Количество интервалов:</strong> ${partsCount}</p>
+            <p><strong>Средняя длительность части:</strong> ${formatDuration(partDuration)}</p>
+        `;
+    }
+    
+    const resultsBody = document.getElementById('results-body');
+    resultsBody.innerHTML = '';
+    let partNumber = 1;
+    let previousDay = '';
+    
+    let groupStartRecorder = null;
+    let groupStartCamera = null;
+    let previousRecorder = null;
+    let previousCamera = null;
+    
+    const intervalsWithDays = [];
+    intervals.forEach((item) => {
+        if (item.isDayStart) {
+            intervalsWithDays.push(item);
+            previousDay = item.dayDate.toDateString();
+        } else {
+            const currentDay = item.date.toDateString();
+            if (currentDay !== previousDay && previousDay !== '') {
+                intervalsWithDays.push({ isDayStart: true, dayDate: item.date });
+            }
+            previousDay = currentDay;
+            intervalsWithDays.push(item);
+        }
+    });
+    
+    intervalsWithDays.forEach((item) => {
+        if (item.isDayStart) {
+            const row = document.createElement('tr');
+            row.className = 'day-start';
+            row.innerHTML = `<td colspan="8">${formatDayHeader(item.dayDate)}</td>`;
+            resultsBody.appendChild(row);
+            
+            groupStartRecorder = null;
+            groupStartCamera = null;
+            previousRecorder = null;
+            previousCamera = null;
+        } else {
+            item.part = partNumber++;
+            const duration = item.endDate - item.date;
+            
+            const exportVia = item.exportVia || 'vesta';
+            const exportIcon = exportVia === 'line' ? 'line.png' : 'vesta.png';
+            const exportLabel = exportVia === 'line' ? 'Line' : 'Vesta';
+            
+            const row = document.createElement('tr');
+            const currentRecorder = item.recorder || '';
+            const currentCamera = item.camera || '';
+            
+            if (groupStartRecorder === null) {
+                groupStartRecorder = currentRecorder;
+                groupStartCamera = currentCamera;
+                previousRecorder = currentRecorder;
+                previousCamera = currentCamera;
+                row.className = '';
+            } else {
+                const isDifferentFromGroupStart = 
+                    (currentRecorder !== groupStartRecorder || currentCamera !== groupStartCamera);
+                if (isDifferentFromGroupStart) {
+                    groupStartRecorder = currentRecorder;
+                    groupStartCamera = currentCamera;
+                    row.className = '';
+                } else {
+                    row.className = 'interval-custom';
+                }
+            }
+            
+            if (item.isCustom) row.className = 'interval-custom';
+            if (item.highlightType) row.classList.add(item.highlightType);
+            
+            row.innerHTML = `
+                <td class="part-number"><div>${item.part}</div></td>
+                <td>${formatTime(item.date)}</td>
+                <td>${formatTime(item.endDate)}</td>
+                <td>${formatDuration(duration)}</td>
+                <td>
+                    <select class="recorder-select">
+                        <option value="">Выберите</option>
+                        <option value="Зал1">Зал1</option>
+                        <option value="Зал2">Зал2</option>
+                        <option value="Зал2-2">Зал2-2</option>
+                        <option value="Зал3-1">Зал3-1</option>
+                        <option value="Зал3-2">Зал3-2</option>
+                        <option value="Зал3-3">Зал3-3</option>
+                        <option value="Улица">Улица</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="camera-select">
+                        <option value="">Выберите</option>
+                        ${Array.from({length: 32}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                    </select>
+                </td>
+                <td>
+                    <button class="split-btn" title="Разделить интервал">
+                        <i class="fas fa-code-branch"></i>
+                    </button>
+                </td>
+                <td>
+                    <button class="export-btn" title="Способ выгрузки: ${exportLabel}">
+                        <img src="${exportIcon}" alt="${exportLabel}">
+                    </button>
+                </td>
+            `;
+            resultsBody.appendChild(row);
+            
+            const recorderSelect = row.querySelector('.recorder-select');
+            const cameraSelect = row.querySelector('.camera-select');
+            
+            if (item.recorder) recorderSelect.value = item.recorder;
+            if (item.camera) cameraSelect.value = item.camera;
+            
+            previousRecorder = currentRecorder;
+            previousCamera = currentCamera;
+            
+            const updateHandler = () => {
+                const actualIndex = currentIntervals.findIndex(interval => 
+                    !interval.isDayStart && 
+                    interval.date.getTime() === item.date.getTime() &&
+                    interval.endDate.getTime() === item.endDate.getTime()
+                );
+                if (actualIndex !== -1) {
+                    currentIntervals[actualIndex].recorder = recorderSelect.value;
+                    currentIntervals[actualIndex].camera = cameraSelect.value;
+                }
+                updateCustomClasses();
+            };
+            
+            recorderSelect.addEventListener('change', updateHandler);
+            cameraSelect.addEventListener('change', updateHandler);
+            
+            row.querySelector('.split-btn').addEventListener('click', () => {
+                const actualIndex = currentIntervals.findIndex(interval => 
+                    !interval.isDayStart && 
+                    interval.date.getTime() === item.date.getTime() &&
+                    interval.endDate.getTime() === item.endDate.getTime()
+                );
+                if (actualIndex !== -1) openEditModal(actualIndex);
+            });
+
+            // ===== Кнопка "Выгрузка через" =====
+            row.querySelector('.export-btn').addEventListener('click', () => {
+                const actualIndex = currentIntervals.findIndex(interval => 
+                    !interval.isDayStart && 
+                    interval.date.getTime() === item.date.getTime() &&
+                    interval.endDate.getTime() === item.endDate.getTime()
+                );
+                if (actualIndex !== -1) {
+                    const current = currentIntervals[actualIndex].exportVia || 'vesta';
+                    const newVal = current === 'line' ? 'vesta' : 'line';
+                    currentIntervals[actualIndex].exportVia = newVal;
+
+                    const btn = row.querySelector('.export-btn');
+                    const img = btn.querySelector('img');
+                    const label = newVal === 'line' ? 'Line' : 'Vesta';
+                    img.src = newVal === 'line' ? 'line.png' : 'vesta.png';
+                    img.alt = label;
+                    btn.title = `Способ выгрузки: ${label}`;
+                }
+            });
+        }
+    });
+    
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('control-block').style.display = 'block';
+}
+
+function updateCustomClasses() {
+    const rows = document.querySelectorAll('#results-body tr:not(.day-start)');
+    let groupStartRecorder = null;
+    let groupStartCamera = null;
+    
+    rows.forEach((row, index) => {
+        const recorderSelect = row.querySelector('.recorder-select');
+        const cameraSelect = row.querySelector('.camera-select');
+        const currentRecorder = recorderSelect.value;
+        const currentCamera = cameraSelect.value;
+        
+        if (index === 0) {
+            groupStartRecorder = currentRecorder;
+            groupStartCamera = currentCamera;
+            row.classList.remove('interval-custom');
+            return;
+        }
+        
+        const isDifferentFromGroupStart = 
+            (currentRecorder !== groupStartRecorder || currentCamera !== groupStartCamera);
+        if (isDifferentFromGroupStart) {
+            groupStartRecorder = currentRecorder;
+            groupStartCamera = currentCamera;
+            row.classList.remove('interval-custom');
+        } else {
+            row.classList.add('interval-custom');
+        }
+    });
+}
+
+function formatDayHeader(date) {
+    const shortDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth()+1).toString().padStart(2, '0')}/${date.getFullYear().toString().slice(2)}`;
+    const longDate = date.toLocaleDateString('ru-RU', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    return `${shortDate} (${longDate})`;
+}
+
+function formatTime(date) {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+function formatDuration(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours}ч ${minutes.toString().padStart(2, '0')}м ${seconds.toString().padStart(2, '0')}с`;
+}
+
+// ============ РЕДАКТИРОВАНИЕ ============
+function openEditModal(index) {
+    editingIndex = index;
+    const interval = currentIntervals[index];
+    
+    if (!interval || !interval.date || !interval.endDate) {
+        showToast('Ошибка: неверный интервал для редактирования', 'error');
+        console.error('Invalid interval for editing:', interval);
+        return;
+    }
+    
+    document.getElementById('original-start').value = formatTimeForInput(interval.date);
+    document.getElementById('original-end').value = formatTimeForInput(interval.endDate);
+    document.getElementById('new-start').value = formatTimeForInput(interval.date);
+    document.getElementById('new-end').value = formatTimeForInput(interval.endDate);
+    
+    currentDate = new Date(interval.date);
+    document.getElementById('edit-modal').classList.add('show');
+    
+    document.getElementById('original-end').addEventListener('input', syncTimes);
+    document.getElementById('new-start').addEventListener('input', syncTimes);
+    document.getElementById('new-end').addEventListener('input', validateNewEnd);
+}
+
+// Полный формат с секундами
+function formatTimeForInput(date) {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+// Нормализация: приводим к HH:MM:SS, НЕ обнуляя секунды
+function normalizeTime(timeStr) {
+    if (!timeStr) return timeStr;
+    if (/^\d{1,2}:\d{2}$/.test(timeStr)) {
+        const [h, m] = timeStr.split(':');
+        return `${h.padStart(2, '0')}:${m}:00`;
+    }
+    if (/^\d{1,2}:\d{2}:\d{2}$/.test(timeStr)) {
+        const [h, m, s] = timeStr.split(':');
+        return `${h.padStart(2, '0')}:${m}:${s}`;
+    }
+    return timeStr;
+}
+
+function syncTimes() {
+    const originalEnd = document.getElementById('original-end');
+    const newStart = document.getElementById('new-start');
+    
+    if (this.id === 'original-end') {
+        newStart.value = this.value;
+    } else if (this.id === 'new-start') {
+        originalEnd.value = this.value;
+    }
+    document.getElementById('new-end').min = newStart.value;
+}
+
+function validateNewEnd() {
+    const newStartValue = document.getElementById('new-start').value;
+    if (this.value < newStartValue) {
+        this.value = newStartValue;
+    }
+}
+
+function formatFullDate(date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function applyEdit() {
+    const originalEndValue = normalizeTime(document.getElementById('original-end').value);
+    const newStartValue = normalizeTime(document.getElementById('new-start').value);
+    const newEndValue = normalizeTime(document.getElementById('new-end').value);
+    
+    if (!originalEndValue || !newStartValue || !newEndValue) {
+        showToast('Заполните все поля времени', 'error');
+        return;
+    }
+    
+    const fullDate = formatFullDate(currentDate);
+    const originalEndTime = new Date(`${fullDate}T${originalEndValue}`);
+    const newStartTime = new Date(`${fullDate}T${newStartValue}`);
+    const newEndTime = new Date(`${fullDate}T${newEndValue}`);
+    
+    if (isNaN(originalEndTime.getTime()) || isNaN(newStartTime.getTime()) || isNaN(newEndTime.getTime())) {
+        showToast('Ошибка: неверный формат времени', 'error');
+        return;
+    }
+    if (newStartTime >= newEndTime) {
+        showToast('Время начала должно быть раньше времени окончания', 'error');
+        return;
+    }
+    
+    const originalInterval = currentIntervals[editingIndex];
+    const originalStart = originalInterval.date;
+    const originalEnd = originalInterval.endDate;
+    const originalRecorder = originalInterval.recorder || '';
+    const originalCamera = originalInterval.camera || '';
+    const originalExportVia = originalInterval.exportVia || 'vesta';
+    
+    if (originalEndTime < originalStart || originalEndTime > originalEnd || 
+        newStartTime < originalStart || newStartTime > originalEnd || 
+        newEndTime < originalStart || newEndTime > originalEnd) {
+        showToast('Новый интервал должен находиться внутри исходного', 'error');
+        return;
+    }
+    
+    const newIntervals = [];
+    
+    if (originalStart < originalEndTime && (originalEndTime - originalStart) > 0) {
+        newIntervals.push({
+            part: 0, date: new Date(originalStart), endDate: new Date(originalEndTime),
+            isDayStart: false, recorder: originalRecorder, camera: originalCamera,
+            exportVia: originalExportVia,
+            highlightType: 'highlight-original'
+        });
+    }
+    
+    newIntervals.push({
+        part: 0, date: new Date(newStartTime), endDate: new Date(newEndTime),
+        isDayStart: false, recorder: originalRecorder, camera: originalCamera,
+        exportVia: originalExportVia,
+        highlightType: 'highlight-new'
+    });
+    
+    if (newEndTime < originalEnd && (originalEnd - newEndTime) > 0) {
+        newIntervals.push({
+            part: 0, date: new Date(newEndTime), endDate: new Date(originalEnd),
+            isDayStart: false, recorder: originalRecorder, camera: originalCamera,
+            exportVia: originalExportVia,
+            highlightType: 'highlight-original'
+        });
+    }
+    
+    currentIntervals.splice(editingIndex, 1, ...newIntervals);
+    displayResultsAfterEdit();
+    closeEditModal();
+    showToast('Интервал успешно разделен!', 'success');
+    
+    setTimeout(() => {
+        currentIntervals.forEach(item => { if (item.highlightType) delete item.highlightType; });
+        displayResultsAfterEdit();
+    }, 3000);
+}
+
+function displayResultsAfterEdit() {
+    let partNumber = 1;
+    currentIntervals.forEach(item => { if (!item.isDayStart) item.part = partNumber++; });
+    displayResults(globalStartDate, globalEndDate, currentIntervals);
+}
+
+function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('show');
+    document.getElementById('original-end').removeEventListener('input', syncTimes);
+    document.getElementById('new-start').removeEventListener('input', syncTimes);
+    document.getElementById('new-end').removeEventListener('input', validateNewEnd);
+}
+
+// ============ ДОБАВЛЕНИЕ ИНТЕРВАЛА ============
+document.getElementById('add-interval-btn').addEventListener('click', openAddModal);
+document.getElementById('apply-add').addEventListener('click', applyAddInterval);
+document.getElementById('cancel-add').addEventListener('click', closeAddModal);
+document.getElementById('copy-key-btn').addEventListener('click', copyTimingKey);
+document.getElementById('paste-key-btn').addEventListener('click', pasteTimingKey);
+document.getElementById('add-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeAddModal();
+});
+
+function openAddModal() {
+    const today = document.getElementById('start-date').value;
+    document.getElementById('add-start-date').value = today;
+    document.getElementById('add-end-date').value = today;
+    
+    document.getElementById('add-start-date').addEventListener("change", () => {
+        document.getElementById('add-end-date').value = document.getElementById('add-start-date').value;
+    });
+    
+    document.getElementById('add-modal').classList.add('show');
+}
+
+function closeAddModal() {
+    document.getElementById('add-modal').classList.remove('show');
+}
+
+function applyAddInterval() {
+    const startDate = document.getElementById('add-start-date').value;
+    const startTime = document.getElementById('add-start-time').value;
+    const endDate = document.getElementById('add-end-date').value;
+    const endTime = document.getElementById('add-end-time').value;
+    const maxIntervalHours = parseInt(document.getElementById('max-interval').value);
+    
+    if (!startDate || !startTime || !endDate || !endTime) {
+        showToast('Заполните все поля даты и времени', 'error');
+        return;
+    }
+    
+    const startDatetime = roundToSecond(new Date(`${startDate}T${startTime}`));
+    const endDatetime = roundToSecond(new Date(`${endDate}T${endTime}`));
+    
+    if (endDatetime <= startDatetime) {
+        showToast('Дата окончания должна быть после даты начала', 'error');
+        return;
+    }
+    
+    const maxIntervalSeconds = maxIntervalHours * 3600;
+    const newIntervals = [];
+    let current = new Date(startDatetime);
+    
+    const allIntervals = currentIntervals.filter(i => !i.isDayStart);
+    const lastInterval = allIntervals[allIntervals.length - 1];
+    const shouldInheritCustomClass = lastInterval && lastInterval.isCustom;
+    const inheritedExportVia = lastInterval && lastInterval.exportVia ? lastInterval.exportVia : 'vesta';
+    
+    while (current < endDatetime) {
+        const endOfDay = getEndOfDay(current);
+        const dayEnd = endOfDay < endDatetime ? endOfDay : endDatetime;
+        const remainingDayTime = dayEnd - current;
+        
+        if (remainingDayTime <= 0) {
+            current = getStartOfNextDay(current);
+            continue;
+        }
+        
+        const remainingSeconds = Math.floor(remainingDayTime / 1000);
+        const intervalsInDay = Math.max(1, Math.ceil(remainingSeconds / maxIntervalSeconds));
+        const baseSeconds = Math.floor(remainingSeconds / intervalsInDay);
+        
+        for (let i = 0; i < intervalsInDay; i++) {
+            const isLastInDay = (i === intervalsInDay - 1);
+            let end;
+            if (isLastInDay) {
+                end = new Date(dayEnd);
+            } else {
+                end = new Date(current.getTime() + baseSeconds * 1000);
+            }
+            end = roundToSecond(end);
+            
+            if (end - current > 0) {
+                newIntervals.push({
+                    part: 0, date: new Date(current), endDate: new Date(end),
+                    isDayStart: false, recorder: '', camera: '',
+                    exportVia: inheritedExportVia,
+                    isCustom: shouldInheritCustomClass,
+                    customIndex: customIntervalsCount++
+                });
+            }
+            
+            current = end;
+            if (current >= endDatetime) break;
+        }
+        
+        if (current < endDatetime) {
+            current = getStartOfNextDay(current);
+        }
+    }
+    
+    currentIntervals.push(...newIntervals);
+    
+    const allDates = currentIntervals
+        .filter(i => !i.isDayStart)
+        .flatMap(i => [i.date, i.endDate]);
+    
+    if (allDates.length > 0) {
+        globalStartDate = new Date(Math.min(...allDates));
+        globalEndDate = new Date(Math.max(...allDates));
+    }
+    
+    displayResults(globalStartDate, globalEndDate, currentIntervals);
+    closeAddModal();
+    showToast('Интервал успешно добавлен и разбит на части!', 'success');
+}
+
+// ============ КЛЮЧИ ТАЙМИНГОВ (ТОКЕНЫ) ============
+// UTF-8 <-> hex, работает с кириллицей и любыми юникод-символами
+function stringToHex(str) {
+    const bytes = new TextEncoder().encode(str);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function hexToString(hex) {
+    hex = String(hex).replace(/[^0-9A-Fa-f]/g, '');
+    if (hex.length % 2 !== 0) hex = hex.slice(0, -1);
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+    }
+    return new TextDecoder('utf-8').decode(bytes);
+}
+
+function copyTimingKey() {
+    try {
+        const data = {
+            intervals: currentIntervals,
+            orderTitle: document.getElementById('orderTitle').value,
+            startDate: document.getElementById('start-date').value,
+            startTime: document.getElementById('start-time').value,
+            endDate: document.getElementById('end-date').value,
+            endTime: document.getElementById('end-time').value,
+            maxInterval: document.getElementById('max-interval').value
+        };
+        
+        const jsonString = JSON.stringify(data);
+        const hexKey = stringToHex(jsonString);
+        
+        navigator.clipboard.writeText(hexKey).then(() => {
+            showToast('Ключ таймингов скопирован!', 'success');
+        }).catch(err => {
+            showToast('Ошибка копирования ключа', 'error');
+            console.error('Copy failed', err);
+        });
+    } catch (error) {
+        showToast('Ошибка создания ключа: ' + error.message, 'error');
+        console.error('Key creation error:', error);
+    }
+}
+
+function pasteTimingKey() {
+    const key = prompt('Введите ключ таймингов:');
+    if (!key) return;
+
+    try {
+        const jsonString = hexToString(key.trim());
+        const data = JSON.parse(jsonString);
+        applyTimingData(data);
+        showToast('Ключ таймингов успешно применен!', 'success');
+    } catch (error) {
+        console.error('Paste error:', error);
+        showToast('Неверный формат ключа. Возможно, ключ поврежден.', 'error');
+    }
+}
+
+function applyTimingData(data) {
+    const orderTitleValue = data.orderTitle || '';
+    document.getElementById('orderTitle').value = orderTitleValue;
+    document.querySelector('.orderData').innerHTML = orderTitleValue;
+    document.getElementById('start-date').value = data.startDate || '';
+    document.getElementById('start-time').value = data.startTime || '';
+    document.getElementById('end-date').value = data.endDate || '';
+    document.getElementById('end-time').value = data.endTime || '';
+    document.getElementById('max-interval').value = data.maxInterval || 4;
+    
+    if (data.intervals && Array.isArray(data.intervals)) {
+        currentIntervals = data.intervals.map(interval => ({
+            ...interval,
+            date: new Date(interval.date),
+            endDate: new Date(interval.endDate),
+            dayDate: interval.dayDate ? new Date(interval.dayDate) : null,
+            recorder: interval.recorder || '',
+            camera: interval.camera || '',
+            exportVia: interval.exportVia || 'vesta',
+            isCustom: interval.isCustom || false
+        }));
+        
+        const allDates = currentIntervals
+            .filter(i => !i.isDayStart)
+            .flatMap(i => [i.date, i.endDate]);
+        
+        if (allDates.length > 0) {
+            globalStartDate = new Date(Math.min(...allDates));
+            globalEndDate = new Date(Math.max(...allDates));
+        }
+        
+        displayResults(globalStartDate, globalEndDate, currentIntervals);
+    }
+}
+    </script>
+</body>
+</html>
