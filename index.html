@@ -668,12 +668,155 @@
             right: 0;
             box-sizing: border-box;
         }
+
+        .history-block {
+            margin-bottom: 20px;
+            animation: fadeInHistory .35s ease;
+        }
+        @keyframes fadeInHistory {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .history-title {
+            color: var(--primary-color);
+            font-size: 1rem;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: .3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-clear {
+            width: auto;
+            margin: 0;
+            padding: 8px 12px;
+            background: transparent;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b55;
+            font-size: 13px;
+            border-radius: 8px;
+            min-width: unset;
+        }
+        .history-clear:hover { background: #ff6b6b; color: #000; }
+
+        .history-list {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 6px 4px 14px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--secondary-color) transparent;
+        }
+        .history-list::-webkit-scrollbar { height: 6px; }
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+        .history-list::-webkit-scrollbar-track { background: #00000033; }
+
+        .history-card {
+            flex: 0 0 auto;
+            min-width: 175px;
+            max-width: 210px;
+            background: var(--card-color);
+            border-radius: 10px;
+            padding: 14px 16px;
+            cursor: pointer;
+            position: relative;
+            border-left: 4px solid var(--secondary-color);
+            box-shadow: 0 2px 4px #0003;
+            transition: transform .2s, box-shadow .2s, background .2s, border-color .2s;
+            user-select: none;
+        }
+        .history-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px #0007;
+            background: #262626;
+        }
+        .history-card.active {
+            border-left-color: var(--primary-color);
+            background: #262626;
+            box-shadow: 0 0 0 1px var(--primary-color), 0 6px 14px #0006;
+        }
+
+        .history-card .hc-order {
+            font-weight: 700;
+            color: var(--secondary-color);
+            font-size: .95rem;
+            margin-bottom: 6px;
+            word-break: break-word;
+            padding-right: 20px;
+            line-height: 1.25;
+        }
+        .history-card .hc-date {
+            font-size: .76rem;
+            color: #9a9a9a;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .history-card .hc-range {
+            font-size: .7rem;
+            color: #6f6f6f;
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-card .hc-del {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00000055;
+            color: #ff6b6b;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            min-width: unset;
+            opacity: 0;
+            transition: opacity .2s, background .2s, color .2s;
+        }
+        .history-card:hover .hc-del { opacity: 1; }
+        .history-card .hc-del:hover { background: #ff6b6b; color: #000; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Разделитель временных интервалов</h1>
         
+        <div class="history-block" id="history-block" style="display: none;">
+            <div class="history-head">
+                <h2 class="history-title">
+                    <i class="fas fa-history"></i> Последние выгрузки
+                </h2>
+                <button class="history-clear" id="history-clear" title="Очистить историю">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+            <div class="history-list" id="history-list"></div>
+        </div>
+
         <div class="card">
 
             <div class="input-container">
@@ -925,6 +1068,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     initCameras();
+    renderHistory();
+    generateFavicon();
 });
 
 let currentIntervals = [];
@@ -1149,6 +1294,7 @@ function calculateIntervals() {
         }
         
         displayResults(startDatetime, endDatetime, intervals);
+        persistHistory(true);
         showToast('Интервалы успешно рассчитаны!', 'success');
         
     } catch (error) {
@@ -1302,6 +1448,7 @@ function displayResults(startDate, endDate, intervals) {
                     currentIntervals[actualIndex].camera = cameraSelect.value;
                 }
                 updateCustomClasses();
+                persistHistory(false);
             };
             
             recorderSelect.addEventListener('change', updateHandler);
@@ -1334,6 +1481,7 @@ function displayResults(startDate, endDate, intervals) {
                     img.src = newVal === 'line' ? 'line.png' : 'vesta.png';
                     img.alt = label;
                     btn.title = `Способ выгрузки: ${label}`;
+                    persistHistory(false);
                 }
             });
         }
@@ -1548,6 +1696,8 @@ function displayResultsAfterEdit() {
     let partNumber = 1;
     currentIntervals.forEach(item => { if (!item.isDayStart) item.part = partNumber++; });
     displayResults(globalStartDate, globalEndDate, currentIntervals);
+    persistHistory(false);
+    showToast('Настройки применены ко всем интервалам', 'success');
 }
 
 function closeEditModal() {
@@ -1667,6 +1817,7 @@ function applyAddInterval() {
     }
     
     displayResults(globalStartDate, globalEndDate, currentIntervals);
+    persistHistory(false);
     closeAddModal();
     showToast('Интервал успешно добавлен и разбит на части!', 'success');
 }
@@ -1723,6 +1874,8 @@ function pasteTimingKey() {
         const jsonString = hexToString(key.trim());
         const data = JSON.parse(jsonString);
         applyTimingData(data);
+        currentHistoryId = null; 
+        persistHistory(true);
         showToast('Ключ таймингов успешно применен!', 'success');
     } catch (error) {
         console.error('Paste error:', error);
@@ -1764,6 +1917,339 @@ function applyTimingData(data) {
         displayResults(globalStartDate, globalEndDate, currentIntervals);
     }
 }
+
+/* ================================================================
+   ИСТОРИЯ ВЫГРУЗОК (в localStorage хранится тот же hex-ключ,
+   что и у кнопки «Копировать ключ таймингов»)
+   ================================================================ */
+const HISTORY_KEY   = 'intervalSplitterHistory_v2';
+const HISTORY_LIMIT = 10;
+
+let currentHistoryId = null;
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+}
+
+function formatDateShort(iso) {
+    if (!iso) return '—';
+    const parts = String(iso).split('-');
+    if (parts.length !== 3) return iso;
+    return `${parts[2]}.${parts[1]}.${parts[0].slice(2)}`;
+}
+
+function getHistory() {
+    try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+        console.warn('History read error:', e);
+        return [];
+    }
+}
+
+function setHistory(arr) {
+    try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    } catch (e) {
+        console.warn('History write error:', e);
+        showToast('Не удалось сохранить историю', 'error');
+    }
+}
+
+/** Собирает текущее состояние приложения (то же, что уходит в ключ). */
+function collectTimingData() {
+    return {
+        intervals:   currentIntervals,
+        orderTitle:  document.getElementById('orderTitle').value,
+        startDate:   document.getElementById('start-date').value,
+        startTime:   document.getElementById('start-time').value,
+        endDate:     document.getElementById('end-date').value,
+        endTime:     document.getElementById('end-time').value,
+        maxInterval: document.getElementById('max-interval').value
+    };
+}
+
+/** Строит hex-ключ ровно так же, как copyTimingKey(). */
+function buildTimingKey() {
+    const json = JSON.stringify(collectTimingData());
+    return stringToHex(json);
+}
+
+/** Создаёт объект новой записи истории. */
+function makeHistoryEntry(key) {
+    return {
+        id:         'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        orderTitle: document.getElementById('orderTitle').value || 'Без номера',
+        startDate:  document.getElementById('start-date').value,
+        endDate:    document.getElementById('end-date').value,
+        createdAt:  new Date().toISOString(),
+        key
+    };
+}
+
+/**
+ * Сохраняет текущее состояние.
+ * @param {boolean} asNew — true: попытаться создать новую запись (с проверкой дубликата),
+ *                          false: обновить текущую запись.
+ */
+function persistHistory(asNew = false) {
+    if (!currentIntervals || currentIntervals.length === 0) return;
+
+    const key = buildTimingKey();
+    let   history = getHistory();
+
+    // ---- 1. Новая запись: сначала ищем дубликат по ключу ----
+    if (asNew) {
+        const dupIdx = history.findIndex(h => h.key === key);
+        if (dupIdx !== -1) {
+            // Дубликат найден — обновляем метаданные и переносим вверх
+            const [entry] = history.splice(dupIdx, 1);
+            entry.orderTitle = document.getElementById('orderTitle').value || 'Без номера';
+            entry.startDate  = document.getElementById('start-date').value;
+            entry.endDate    = document.getElementById('end-date').value;
+            entry.createdAt  = new Date().toISOString();
+            history.unshift(entry);
+            currentHistoryId = entry.id;
+        } else {
+            const entry = makeHistoryEntry(key);
+            currentHistoryId = entry.id;
+            history.unshift(entry);
+        }
+    }
+    // ---- 2. Обновление текущей записи ----
+    else {
+        let idx = currentHistoryId
+            ? history.findIndex(h => h.id === currentHistoryId)
+            : -1;
+
+        // Если записи нет (была удалена или ещё не создана) — создаём
+        if (idx === -1) {
+            const entry = makeHistoryEntry(key);
+            currentHistoryId = entry.id;
+            history.unshift(entry);
+        } else {
+            // Проверяем, не совпало ли новое состояние с какой-то ДРУГОЙ записью
+            const dupIdx = history.findIndex((h, i) => i !== idx && h.key === key);
+
+            if (dupIdx !== -1) {
+                // Совпало — удаляем текущую, активируем дубликат и поднимаем его вверх
+                const dupId = history[dupIdx].id;
+                history.splice(idx, 1);
+
+                const dupNewIdx = history.findIndex(h => h.id === dupId);
+                const [dupEntry] = history.splice(dupNewIdx, 1);
+                dupEntry.orderTitle = document.getElementById('orderTitle').value || 'Без номера';
+                dupEntry.createdAt  = new Date().toISOString();
+                history.unshift(dupEntry);
+                currentHistoryId = dupEntry.id;
+            } else {
+                // Просто обновляем текущую
+                history[idx].key        = key;
+                history[idx].orderTitle = document.getElementById('orderTitle').value || 'Без номера';
+                history[idx].startDate  = document.getElementById('start-date').value;
+                history[idx].endDate    = document.getElementById('end-date').value;
+            }
+        }
+    }
+
+    history = history.slice(0, HISTORY_LIMIT);
+    setHistory(history);
+    renderHistory();
+}
+
+function renderHistory() {
+    const block = document.getElementById('history-block');
+    const list  = document.getElementById('history-list');
+    const history = getHistory();
+
+    if (!history.length) {
+        block.style.display = 'none';
+        list.innerHTML = '';
+        return;
+    }
+
+    block.style.display = 'block';
+    list.innerHTML = '';
+
+    history.forEach(entry => {
+        const card = document.createElement('div');
+        card.className = 'history-card' + (entry.id === currentHistoryId ? ' active' : '');
+        card.dataset.id = entry.id;
+
+        const created = entry.createdAt ? new Date(entry.createdAt) : null;
+        const createdStr = (created && !isNaN(created))
+            ? `${pad2(created.getDate())}.${pad2(created.getMonth() + 1)}.${created.getFullYear()} ${pad2(created.getHours())}:${pad2(created.getMinutes())}`
+            : '';
+
+        const rangeStr = entry.startDate
+            ? `${formatDateShort(entry.startDate)} → ${formatDateShort(entry.endDate)}`
+            : '';
+
+        card.innerHTML = `
+            <button class="hc-del" title="Удалить"><i class="fas fa-times"></i></button>
+            <div class="hc-order">${escapeHtml(entry.orderTitle || 'Без номера')}</div>
+            <div class="hc-date"><i class="far fa-clock"></i> ${createdStr}</div>
+            ${rangeStr ? `<div class="hc-range">${rangeStr}</div>` : ''}
+        `;
+
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.hc-del')) return;
+            loadHistoryEntry(entry.id);
+        });
+
+        card.querySelector('.hc-del').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteHistoryEntry(entry.id);
+        });
+
+        list.appendChild(card);
+    });
+}
+
+/** Загружает запись: декодирует ключ и применяет его как при «Вставить ключ». */
+function loadHistoryEntry(id) {
+    const entry = getHistory().find(h => h.id === id);
+    if (!entry) {
+        showToast('Запись не найдена', 'error');
+        return;
+    }
+    try {
+        const jsonString = hexToString(entry.key);
+        const data = JSON.parse(jsonString);
+        currentHistoryId = entry.id;
+        applyTimingData(data);
+        renderHistory();
+        showToast('Выгрузка загружена', 'success');
+    } catch (err) {
+        console.error('History load error:', err);
+        showToast('Не удалось загрузить запись', 'error');
+    }
+}
+
+function deleteHistoryEntry(id) {
+    const history = getHistory().filter(h => h.id !== id);
+    setHistory(history);
+    if (currentHistoryId === id) currentHistoryId = null;
+    renderHistory();
+    showToast('Запись удалена', 'info');
+}
+
+document.getElementById('history-clear').addEventListener('click', () => {
+    if (!getHistory().length) return;
+    if (!confirm('Очистить всю историю выгрузок?')) return;
+    localStorage.removeItem(HISTORY_KEY);
+    currentHistoryId = null;
+    renderHistory();
+    showToast('История очищена', 'info');
+});
+
+/* ================================================================
+   ДИНАМИЧЕСКАЯ ИКОНКА САЙТА (градиент на icon.svg)
+   ================================================================ */
+const FALLBACK_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<path fill="black" fill-rule="evenodd" d="M256 24C127.9 24 24 127.9 24 256s103.9 232 232 232 232-103.9 232-232S384.1 24 256 24zm0 56c97.2 0 176 78.8 176 176s-78.8 176-176 176S80 353.2 80 256 158.8 80 256 80z"/>
+<path fill="black" d="M243 118h26v146h-26z"/>
+<path fill="black" d="M256 238l106 62-13 22-106-62z"/>
+</svg>`;
+
+function randomGradientColors() {
+    const hue1  = Math.random() * 360;
+    // Аналоговая схема: второй оттенок сдвинут на 25–80° — цвета «дружат» между собой
+    const hue2  = (hue1 + 25 + Math.random() * 55) % 360;
+    const sat   = 68 + Math.random() * 27;   // 68–95%
+    const light1 = 50 + Math.random() * 10;  // 50–60%
+    const light2 = 54 + Math.random() * 10;  // 54–64%
+    return {
+        c1: `hsl(${hue1.toFixed(1)}, ${sat.toFixed(1)}%, ${light1.toFixed(1)}%)`,
+        c2: `hsl(${hue2.toFixed(1)}, ${sat.toFixed(1)}%, ${light2.toFixed(1)}%)`
+    };
+}
+
+function applyGradientToSvg(svg, c1, c2, angle) {
+    const gid = 'favGrad';
+    const rad = (angle - 90) * Math.PI / 180;
+    const dx = Math.cos(rad), dy = Math.sin(rad);
+    const x1 = (50 - dx * 50).toFixed(2) + '%';
+    const y1 = (50 - dy * 50).toFixed(2) + '%';
+    const x2 = (50 + dx * 50).toFixed(2) + '%';
+    const y2 = (50 + dy * 50).toFixed(2) + '%';
+
+    const defs =
+        `<defs><linearGradient id="${gid}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ` +
+        `gradientUnits="objectBoundingBox">` +
+        `<stop offset="0%" stop-color="${c1}"/>` +
+        `<stop offset="100%" stop-color="${c2}"/>` +
+        `</linearGradient></defs>`;
+
+    const openMatch = svg.match(/<svg[^>]*>/i);
+    if (!openMatch) return svg;
+    const openTag = openMatch[0];
+
+    let out = svg.replace(openTag, openTag + defs);
+
+    // Явные чёрные заливки / обводки → градиент
+    const blackFill      = /fill\s*=\s*(["'])\s*(#000000|#000|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))\s*\1/gi;
+    const blackStroke    = /stroke\s*=\s*(["'])\s*(#000000|#000|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))\s*\1/gi;
+    const blackFillCss   = /fill\s*:\s*(#000000|#000|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))/gi;
+    const blackStrokeCss = /stroke\s*:\s*(#000000|#000|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))/gi;
+
+    out = out.replace(blackFill,      `fill="url(#${gid})"`);
+    out = out.replace(blackStroke,    `stroke="url(#${gid})"`);
+    out = out.replace(blackFillCss,   `fill:url(#${gid})`);
+    out = out.replace(blackStrokeCss, `stroke:url(#${gid})`);
+
+    // Корневой fill — элементы без явного fill тоже получат градиент
+    if (/\sfill\s*=/i.test(openTag)) {
+        const newOpen = openTag.replace(/\sfill\s*=\s*(["'])[^"']*\1/i, ` fill="url(#${gid})"`);
+        out = out.replace(openTag, newOpen);
+    } else {
+        out = out.replace(openTag, openTag.replace(/<svg/i, `<svg fill="url(#${gid})"`));
+    }
+
+    return out;
+}
+
+function setFavicon(url) {
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+    }
+    link.type = 'image/svg+xml';
+    link.href = url;
+}
+
+async function generateFavicon() {
+    const { c1, c2 } = randomGradientColors();
+    const angle = Math.round(Math.random() * 360);
+    let svgText = FALLBACK_ICON_SVG;
+
+    try {
+        const res = await fetch('icon.svg', { cache: 'no-cache' });
+        if (res.ok) {
+            const text = await res.text();
+            if (text && /<svg/i.test(text)) svgText = text;
+        }
+    } catch (e) {
+        console.warn('icon.svg недоступен, используется встроенная иконка', e);
+    }
+
+    try {
+        const colored = applyGradientToSvg(svgText, c1, c2, angle);
+        const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(colored);
+        setFavicon(dataUrl);
+    } catch (e) {
+        console.error('Favicon generation error:', e);
+    }
+}
+
     </script>
 </body>
 </html>
