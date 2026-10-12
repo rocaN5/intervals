@@ -6,22 +6,28 @@
     <title>Разделитель временных интервалов</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --card-color: #1e1e1e;
+            --bg-color: #131313;
+            --card-color: rgba(30, 30, 30, 0.55);
             --text-color: #e0e0e0;
             --primary-color: #ffcc00;
             --secondary-color: #ccff00;
             --border-color: #333;
             --focus-color: #ccff0055;
             --day-divider: #ccff0033;
-            --input-group-bg: #252525;
-            --row-hover: #0a0a0a;
+            --input-group-bg: rgba(37, 37, 37, 0.55);
+            --row-hover: rgba(255, 255, 255, 0.035);
             --toast-success: #4caf50;
             --toast-error: #f44336;
             --toast-info: #2196f3;
 
             --extra-color-1: #0fc;
             --extra-color-2: #cf0;
+
+            /* === Стекло === */
+            --glass-blur: 14px;
+            --glass-blur-soft: 10px;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.07);
+            --glass-border-strong: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         input[type=number]::-webkit-inner-spin-button {
@@ -33,7 +39,20 @@
             background-color: var(--primary-color) !important;
             color: #fff !important;
         }
-        
+
+        /* ===== Фон-канвас ===== */
+        #bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            display: block;
+            pointer-events: none;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
@@ -41,30 +60,37 @@
             margin: 0;
             padding: 20px;
             line-height: 1.6;
+            overflow-x: hidden;
         }
-        
+
         .container {
             max-width: 900px;
             margin: 0 auto;
             padding: 20px;
             position: relative;
+            z-index: 1;
         }
-        
+
         h1 {
             color: var(--primary-color);
             text-align: center;
             margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(255, 204, 0, 0.35),
+                         0 0 6px rgba(204, 255, 0, 0.25);
         }
-        
+
         .card {
             background-color: var(--card-color);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border);
             border-radius: 12px;
             padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
             overflow: hidden;
         }
-        
+
         .input-container {
             display: flex;
             gap: 40px;
@@ -78,35 +104,41 @@
             align-items: center;
             position: relative;
         }
-        
+
         .input-block {
             flex: 1;
             min-width: 250px;
             background-color: var(--input-group-bg);
+            backdrop-filter: blur(var(--glass-blur-soft));
+            -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+            border: var(--glass-border);
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
         }
-        
+
         .input-block h3 {
             color: var(--primary-color);
             margin-top: 0;
             margin-bottom: 20px;
             text-align: center;
         }
-        
+
         .date-input, .time-input {
             margin-bottom: 20px;
         }
-        
+
         .control-input {
             width: 100%;
             background: var(--input-group-bg);
+            backdrop-filter: blur(var(--glass-blur-soft));
+            -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+            border: var(--glass-border);
             padding: 10px;
             border-radius: 12px;
             max-width: 210px;
             width: fit-content;
-            box-shadow: 0 2px 4px #0003;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 
             &:has(#orderTitle){
                 min-width: 385px;
@@ -117,31 +149,31 @@
                 text-align: center;
             }
         }
-        
+
         label {
             display: block;
             margin-bottom: 10px;
             color: var(--secondary-color);
             font-weight: 500;
         }
-        
+
         input[type="date"], input[type="time"], input[type="number"], input[type="text"] {
             width: -webkit-fill-available;
             padding: 14px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            background-color: #2d2d2d;
+            background-color: rgba(45, 45, 45, 0.65);
             color: var(--text-color);
             font-size: 16px;
             transition: all 0.3s ease;
         }
-        
+
         input[type="date"]::-webkit-calendar-picker-indicator,
         input[type="time"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
             opacity: 0.8;
         }
-        
+
         input[type="date"]:focus,
         input[type="time"]:focus,
         input[type="text"]:focus,
@@ -150,7 +182,7 @@
             border-color: var(--secondary-color);
             box-shadow: 0 0 0 3px var(--focus-color);
         }
-        
+
         button {
             background-color: var(--primary-color);
             color: #000;
@@ -168,16 +200,16 @@
             justify-content: center;
             gap: 10px;
         }
-        
+
         button:hover {
             background-color: #dbaf00;
         }
-        
-        .copy-btn {            
+
+        .copy-btn {
             background-color: var(--secondary-color);
             color: #000;
         }
-        
+
         .copy-btn:hover {
             background-color: #a7d100;
         }
@@ -190,44 +222,44 @@
                 background-color: var(--secondary-color);
             }
         }
-        
+
         .results {
             margin-top: 30px;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
         }
-        
+
         th, td {
             padding: 14px 16px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
-        
+
         th {
-            background-color: #2a2a2a;
+            background-color: rgba(42, 42, 42, 0.6);
             color: var(--secondary-color);
             font-weight: 600;
         }
-        
+
         tr.day-start {
             background-color: var(--day-divider);
             font-weight: bold;
         }
-        
+
         tr.day-start td {
             padding: 12px 16px;
             border-bottom: 2px solid var(--secondary-color);
             border-top: 2px solid var(--secondary-color);
         }
-        
+
         tr:not(.day-start):hover {
             background-color: var(--row-hover);
         }
-        
+
         .part-number {
             font-weight: bold;
             color: var(--primary-color);
@@ -251,39 +283,45 @@
             position: relative;
             transform: translateX(-50%);
         }
-        
+
         .error {
             color: #ff6b6b;
             margin-top: 10px;
             text-align: center;
             font-weight: 500;
         }
-        
+
         .duration-info {
             margin-bottom: 25px;
             padding: 18px;
-            background-color: #252525;
+            background-color: var(--input-group-bg);
+            backdrop-filter: blur(var(--glass-blur-soft));
+            -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+            border: var(--glass-border);
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
         }
-        
+
         .duration-info p {
             margin: 8px 0;
             font-size: 15px;
         }
-        
+
         .toast {
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 15px 25px;
             border-radius: 8px;
-            background-color: #333;
+            background-color: rgba(51, 51, 51, 0.7);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border-strong);
             color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
             z-index: 1000;
             opacity: 0;
             transform: translateX(100%);
@@ -292,16 +330,16 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .toast.show {
             opacity: 1;
             transform: translateX(0);
         }
-        
-        .toast.success { background-color: var(--toast-success); }
-        .toast.error { background-color: var(--toast-error); }
-        .toast.info { background-color: var(--toast-info); }
-        
+
+        .toast.success { background-color: rgba(76, 175, 80, 0.75); }
+        .toast.error { background-color: rgba(244, 67, 54, 0.75); }
+        .toast.info { background-color: rgba(33, 150, 243, 0.75); }
+
         .toast i { font-size: 20px; }
 
         .edit-btn {
@@ -313,19 +351,21 @@
             margin-left: 10px;
             transition: all 0.3s;
         }
-        
+
         .edit-btn:hover {
             color: var(--primary-color);
             transform: scale(1.2);
         }
-        
+
         .edit-modal {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -334,70 +374,77 @@
             visibility: hidden;
             transition: all 0.3s ease;
         }
-        
+
         .edit-modal.show {
             opacity: 1;
             visibility: visible;
         }
-        
+
         .edit-content {
             background-color: var(--card-color);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border-strong);
             border-radius: 12px;
             padding: 25px;
             width: 90%;
             max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
         }
-        
+
         .edit-title {
             color: var(--primary-color);
             margin-top: 0;
             margin-bottom: 25px;
             text-align: center;
         }
-        
+
         .edit-container {
             display: flex;
             gap: 30px;
             margin-bottom: 25px;
         }
-        
+
         .edit-block {
             flex: 1;
             background-color: var(--input-group-bg);
+            backdrop-filter: blur(var(--glass-blur-soft));
+            -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+            border: var(--glass-border);
             border-radius: 10px;
             padding: 20px;
         }
-        
+
         .edit-block h4 {
             color: var(--secondary-color);
             margin-top: 0;
             margin-bottom: 20px;
             text-align: center;
         }
-        
+
         .edit-input-group { margin-bottom: 20px; }
-        
+
         .edit-actions {
             display: flex;
             gap: 15px;
             justify-content: center;
         }
-        
+
         .edit-actions button {
             width: auto;
             min-width: 150px;
             margin-top: 0;
         }
-        
+
         .edit-warning {
             color: #ff9800;
             text-align: center;
             margin-top: 20px;
             font-style: italic;
         }
-        
+
         .highlight-original { background-color: #ccff0026 !important; }
         .highlight-new { background-color: #ffcc0026 !important; }
 
@@ -448,17 +495,20 @@
         }
 
         #original-end {
-            background-color: #2d2d2d !important;
+            background-color: rgba(45, 45, 45, 0.65) !important;
             color: var(--text-color) !important;
             cursor: text !important;
         }
 
         .control-block {
             background-color: var(--card-color);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border);
             border-radius: 12px;
             padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
             overflow: hidden;
             display: none;
         }
@@ -470,7 +520,10 @@
             flex-flow: column;
             margin: 0;
             margin-bottom: 30px;
-            background: var(--bg-color);
+            background: rgba(19, 19, 19, 0.7);
+            backdrop-filter: blur(var(--glass-blur-soft));
+            -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+            border: var(--glass-border);
             width: fit-content;
             padding: 20px;
             border-radius: 20px;
@@ -482,14 +535,14 @@
                 padding: 0px 10px;
             }
         }
-        
+
         .control-block h2 {
             color: var(--primary-color);
             margin-top: 0;
             margin-bottom: 20px;
             text-align: center;
         }
-        
+
         .control-fields {
             display: flex;
             gap: 20px;
@@ -497,26 +550,26 @@
             justify-content: center;
             margin-bottom: 20px;
         }
-        
+
         .control-field { min-width: 200px; }
-        
+
         select {
             width: 100%;
             padding: 14px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            background-color: #2d2d2d;
+            background-color: rgba(45, 45, 45, 0.75);
             color: var(--text-color);
             font-size: 16px;
             transition: all 0.3s ease;
         }
-        
+
         select:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px var(--focus-color);
         }
-        
+
         th:nth-child(5), td:nth-child(5) { width: 150px; }
         th:nth-child(6), td:nth-child(6) { width: 120px; }
         th:nth-child(7), td:nth-child(7) { width: 60px; }
@@ -533,7 +586,9 @@
         .add-modal {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -547,9 +602,13 @@
 
         .add-content {
             background-color: var(--card-color);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border-strong);
             border-radius: 12px;
             padding: 25px;
             width: fit-content;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
         }
 
         .add-title {
@@ -570,8 +629,11 @@
         .add-input-section{
             padding: 20px;
             border-radius: 20px;
-            background: var(--bg-color);
-            box-shadow: 0px 0px 10px 4px #000;
+            background: rgba(19, 19, 19, 0.6);
+            backdrop-filter: blur(var(--glass-blur-soft));
+            -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+            border: var(--glass-border);
+            box-shadow: 0px 0px 10px 4px rgba(0,0,0,0.5);
             label{ color: var(--extra-color-1); }
             input{ min-width: 200px; }
             input:focus{
@@ -620,18 +682,25 @@
             flex-flow: column;
             margin: 0px;
             background: var(--card-color);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border);
             padding: 20px;
             box-sizing: border-box;
             top: 140px;
             border-radius: 12px;
             gap: 20px;
-            box-shadow: 0 4px 6px #0000004d;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            z-index: 5;
         }
 
         .control-buttons-section{
             margin: 0;
             padding: 10px;
             background: var(--input-group-bg);
+            backdrop-filter: blur(var(--glass-blur-soft));
+            -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+            border: var(--glass-border);
             border-radius: 10px;
             gap: 10px;
             display: flex;
@@ -730,23 +799,26 @@
             min-width: 175px;
             max-width: 210px;
             background: var(--card-color);
+            backdrop-filter: blur(var(--glass-blur-soft));
+            -webkit-backdrop-filter: blur(var(--glass-blur-soft));
+            border: var(--glass-border);
             border-radius: 10px;
             padding: 14px 16px;
             cursor: pointer;
             position: relative;
             border-left: 4px solid var(--secondary-color);
-            box-shadow: 0 2px 4px #0003;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
             transition: transform .2s, box-shadow .2s, background .2s, border-color .2s;
             user-select: none;
         }
         .history-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 16px #0007;
-            background: #262626;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.55);
+            background: rgba(38, 38, 38, 0.7);
         }
         .history-card.active {
             border-left-color: var(--primary-color);
-            background: #262626;
+            background: rgba(38, 38, 38, 0.7);
             box-shadow: 0 0 0 1px var(--primary-color), 0 6px 14px #0006;
         }
 
@@ -802,9 +874,11 @@
     </style>
 </head>
 <body>
+    <canvas id="bg"></canvas>
+
     <div class="container">
         <h1>Разделитель временных интервалов</h1>
-        
+
         <div class="history-block" id="history-block" style="display: none;">
             <div class="history-head">
                 <h2 class="history-title">
@@ -831,7 +905,7 @@
                         <input type="time" id="start-time" step="1" value="00:00:00">
                     </div>
                 </div>
-                
+
                 <div class="input-block">
                     <h3>Окончание</h3>
                     <div class="date-input">
@@ -844,13 +918,13 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="extra-input-container">
                 <div class="control-input">
                     <label for="orderTitle">Номер заказа:</label>
                     <input type="text" id="orderTitle" placeholder="Номер заказа">
                 </div>
-                
+
                 <div class="control-input">
                     <label for="max-interval">Интервал</label>
                     <input type="number" id="max-interval" min="1" max="24" value="4">
@@ -880,7 +954,7 @@
                         <option value="Улица">Улица</option>
                     </select>
                 </div>
-                
+
                 <div class="control-field">
                     <label for="global-camera">Камера:</label>
                     <select id="global-camera">
@@ -888,12 +962,12 @@
                     </select>
                 </div>
             </div>
-            
+
             <button id="apply-all-btn" class="copy-btn">
                 <i class="fas fa-check"></i> Применить ко всем интервалам
             </button>
         </div>
-        
+
         <div class="card results" id="results" style="display: none;">
             <h2 class="title">Результаты выгрузки: <span class="orderData"></span></h2>
             <div class="duration-info" id="duration-info"></div>
@@ -917,7 +991,7 @@
         <div class="edit-modal" id="edit-modal">
             <div class="edit-content">
                 <h3 class="edit-title">Редактирование интервала</h3>
-                
+
                 <div class="edit-container">
                     <div class="edit-block">
                         <h4>Исходный интервал</h4>
@@ -930,7 +1004,7 @@
                             <input type="time" id="original-end" step="1">
                         </div>
                     </div>
-                    
+
                     <div class="edit-block">
                         <h4>Новый интервал</h4>
                         <div class="edit-input-group">
@@ -943,11 +1017,11 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="edit-warning">
                     При изменении начала интервала он будет разделен на две части
                 </div>
-                
+
                 <div class="edit-actions">
                     <button id="apply-edit" class="copy-btn">
                         <i class="fas fa-check"></i> Применить
@@ -962,7 +1036,7 @@
         <div class="add-modal" id="add-modal">
             <div class="add-content">
                 <h3 class="add-title">Добавить новый интервал</h3>
-                
+
                 <div class="add-input-wrapper">
                     <div class="add-input-section">
                         <div class="add-input-group">
@@ -974,7 +1048,7 @@
                             <input type="time" id="add-start-time" step="1" value="00:00:00">
                         </div>
                     </div>
-                    
+
                     <div class="add-input-section">
                         <div class="add-input-group">
                             <label for="add-end-date">Дата окончания</label>
@@ -986,7 +1060,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="add-actions">
                     <button id="apply-add" class="copy-btn">
                         <i class="fas fa-plus"></i> Добавить
@@ -998,7 +1072,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="control-buttons-all">
 
         <div class="control-buttons-section">
@@ -1035,6 +1109,167 @@
         </div>
     </div>
 
+    <!-- ============ АНИМИРОВАННЫЙ ФОН ============ -->
+    <script>
+    (() => {
+        const canvas = document.getElementById('bg');
+        const ctx = canvas.getContext('2d');
+
+        let W, H, DPR;
+        let mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+        let time = 0;
+
+        const waves = [
+            { amp: 60,  len: 0.006, speed: 0.6, y: 0.55, color: 'rgba(204, 255, 0, 0.95)',  glow: 'rgba(204, 255, 0, 0.55)',  w: 2 },
+            { amp: 80,  len: 0.004, speed: 0.4, y: 0.65, color: 'rgba(255, 204, 0, 0.9)',   glow: 'rgba(255, 204, 0, 0.5)',   w: 1.8 },
+            { amp: 45,  len: 0.008, speed: 0.9, y: 0.75, color: 'rgba(230, 255, 120, 0.75)', glow: 'rgba(230, 255, 120, 0.45)', w: 1.4 },
+            { amp: 100, len: 0.003, speed: 0.3, y: 0.85, color: 'rgba(255, 220, 80, 0.7)',  glow: 'rgba(255, 220, 80, 0.4)',  w: 1.8 },
+        ];
+
+        function resize() {
+            DPR = Math.min(window.devicePixelRatio || 1, 2);
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = W * DPR;
+            canvas.height = H * DPR;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        }
+
+        window.addEventListener('resize', resize);
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.tx = e.clientX / window.innerWidth;
+            mouse.ty = e.clientY / window.innerHeight;
+        });
+
+        function drawGrid(offsetX, offsetY) {
+            const step = 48;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(204, 255, 0, 0.045)';
+            ctx.lineWidth = 1;
+
+            const startX = -(offsetX % step);
+            const startY = -(offsetY % step);
+
+            ctx.beginPath();
+            for (let x = startX; x <= W; x += step) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, H);
+            }
+            for (let y = startY; y <= H; y += step) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(W, y);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(255, 204, 0, 0.18)';
+            for (let x = startX; x <= W; x += step) {
+                for (let y = startY; y <= H; y += step) {
+                    ctx.fillRect(x - 1, y - 1, 2, 2);
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawWave(wave, t) {
+            ctx.save();
+            ctx.shadowBlur = 26;
+            ctx.shadowColor = wave.glow;
+            ctx.strokeStyle = wave.color;
+            ctx.lineWidth = wave.w;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            ctx.beginPath();
+            const baseY = H * wave.y;
+            const mouseOffset = (mouse.y - 0.5) * 80;
+
+            for (let x = 0; x <= W; x += 4) {
+                const nx = x / W;
+                const y =
+                    baseY +
+                    Math.sin(x * wave.len + t * wave.speed) * wave.amp +
+                    Math.sin(x * wave.len * 2.3 + t * wave.speed * 0.7) * (wave.amp * 0.35) +
+                    Math.cos(nx * Math.PI * 3 + t * 0.5) * 20 +
+                    mouseOffset * Math.sin(nx * Math.PI);
+
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawAmbientGlow() {
+            const gx = mouse.x * W;
+            const gy = mouse.y * H;
+            const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, Math.max(W, H) * 0.6);
+            grad.addColorStop(0, 'rgba(204, 255, 0, 0.07)');
+            grad.addColorStop(0.5, 'rgba(255, 204, 0, 0.04)');
+            grad.addColorStop(1, 'rgba(19, 19, 19, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        const particles = [];
+        for (let i = 0; i < 60; i++) {
+            particles.push({
+                x: Math.random(),
+                y: Math.random(),
+                r: Math.random() * 1.8 + 0.4,
+                s: Math.random() * 0.0004 + 0.0001,
+                phase: Math.random() * Math.PI * 2,
+                tint: Math.random() > 0.5 ? '204, 255, 0' : '255, 204, 0'
+            });
+        }
+
+        function drawParticles(t) {
+            ctx.save();
+            for (const p of particles) {
+                const px = p.x * W + Math.sin(t * 0.5 + p.phase) * 20;
+                const py = p.y * H + Math.cos(t * 0.4 + p.phase) * 20;
+                const alpha = 0.3 + Math.sin(t + p.phase) * 0.3;
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(${p.tint}, ${Math.max(0, alpha)})`;
+                ctx.arc(px, py, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        let last = performance.now();
+
+        function loop(now) {
+            const dt = (now - last) / 1000;
+            last = now;
+            time += dt;
+
+            mouse.x += (mouse.tx - mouse.x) * 0.05;
+            mouse.y += (mouse.ty - mouse.y) * 0.05;
+
+            ctx.fillStyle = '#131313';
+            ctx.fillRect(0, 0, W, H);
+
+            drawAmbientGlow();
+
+            const gridOffX = (mouse.x - 0.5) * 40;
+            const gridOffY = (mouse.y - 0.5) * 40 + time * 12;
+            drawGrid(gridOffX, gridOffY);
+
+            for (const w of waves) drawWave(w, time);
+
+            drawParticles(time);
+
+            requestAnimationFrame(loop);
+        }
+
+        resize();
+        requestAnimationFrame(loop);
+    })();
+    </script>
+
     <script src="html2canvas.min.js"></script>
     <script src="https://kit.fontawesome.com/ffceda30b6.js" crossorigin="anonymous"></script>
     <script>
@@ -1044,10 +1279,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setSeconds(0, 0);
-    
+
     document.getElementById('start-date').valueAsDate = today;
     document.getElementById('end-date').valueAsDate = tomorrow;
-    
+
     let dateCopied = false;
     document.getElementById('start-date').addEventListener('change', function() {
         if (!dateCopied && !document.getElementById('end-date').value) {
@@ -1055,18 +1290,18 @@ document.addEventListener('DOMContentLoaded', function() {
             dateCopied = true;
         }
     });
-    
+
     document.getElementById('calculate-btn').addEventListener('click', calculateIntervals);
     document.getElementById('copy-btn').addEventListener('click', copyResultsAsImage);
     document.getElementById('download-btn').addEventListener('click', downloadResultsAsImage);
     document.getElementById('apply-edit').addEventListener('click', applyEdit);
     document.getElementById('cancel-edit').addEventListener('click', closeEditModal);
     document.getElementById('apply-all-btn').addEventListener('click', applyToAll);
-    
+
     document.getElementById('edit-modal').addEventListener('click', function(e) {
         if (e.target === this) closeEditModal();
     });
-    
+
     initCameras();
     renderHistory();
     generateFavicon();
@@ -1168,14 +1403,12 @@ function showToast(message, type = 'info', duration = 3000) {
 }
 
 // ============ ВРЕМЯ ============
-// Конец дня = 23:59:59 (секунды сохраняем)
 function getEndOfDay(date) {
     const end = new Date(date);
     end.setHours(23, 59, 59, 0);
     return end;
 }
 
-// Начало следующего дня
 function getStartOfNextDay(date) {
     const next = new Date(date);
     next.setDate(next.getDate() + 1);
@@ -1183,7 +1416,6 @@ function getStartOfNextDay(date) {
     return next;
 }
 
-// Убираем ТОЛЬКО миллисекунды, секунды сохраняем
 function roundToSecond(date) {
     const rounded = new Date(date);
     rounded.setMilliseconds(0);
@@ -1204,7 +1436,7 @@ function calculateIntervals() {
     document.getElementById('error-message').textContent = '';
     document.getElementById('results').style.display = 'none';
     document.getElementById('control-block').style.display = 'none';
-    
+
     const startDate = document.getElementById('start-date').value;
     const startTime = document.getElementById('start-time').value;
     const endDate = document.getElementById('end-date').value;
@@ -1212,7 +1444,7 @@ function calculateIntervals() {
     const maxIntervalHours = parseInt(document.getElementById('max-interval').value);
     const orderTitle = document.getElementById('orderTitle').value;
     document.querySelector('.orderData').innerHTML = `${orderTitle}`;
-    
+
     if (!startDate || !startTime || !endDate || !endTime) {
         showToast('Заполните все поля даты и времени', 'error');
         return;
@@ -1221,45 +1453,44 @@ function calculateIntervals() {
         showToast('Укажите корректный интервал (1-24 часа)', 'error');
         return;
     }
-    
+
     const startDatetime = roundToSecond(new Date(`${startDate}T${startTime}`));
     const endDatetime = roundToSecond(new Date(`${endDate}T${endTime}`));
-    
+
     globalStartDate = startDatetime;
     globalEndDate = endDatetime;
-    
+
     if (endDatetime <= startDatetime) {
         showToast('Дата окончания должна быть после даты начала', 'error');
         return;
     }
-    
+
     try {
         const intervals = [];
         let current = new Date(startDatetime);
         let partNumber = 1;
-        
+
         intervals.push({ isDayStart: true, dayDate: new Date(startDatetime) });
         customIntervalsCount = 0;
-        
+
         const maxIntervalSeconds = maxIntervalHours * 3600;
-        
+
         while (current < endDatetime) {
             const endOfDay = getEndOfDay(current);
             const dayEnd = endOfDay < endDatetime ? endOfDay : endDatetime;
             const remainingDayTime = dayEnd - current;
-            
+
             if (remainingDayTime <= 0) {
                 const nextDay = getStartOfNextDay(current);
                 intervals.push({ isDayStart: true, dayDate: new Date(nextDay) });
                 current = nextDay;
                 continue;
             }
-            
-            // Работаем в целых секундах — без «плавающей» точности
+
             const remainingSeconds = Math.floor(remainingDayTime / 1000);
             const intervalsInDay = Math.max(1, Math.ceil(remainingSeconds / maxIntervalSeconds));
             const baseSeconds = Math.floor(remainingSeconds / intervalsInDay);
-            
+
             for (let i = 0; i < intervalsInDay; i++) {
                 const isLastInDay = (i === intervalsInDay - 1);
                 let end;
@@ -1269,7 +1500,7 @@ function calculateIntervals() {
                     end = new Date(current.getTime() + baseSeconds * 1000);
                 }
                 end = roundToSecond(end);
-                
+
                 if (end - current > 0) {
                     intervals.push({
                         part: partNumber++,
@@ -1281,22 +1512,22 @@ function calculateIntervals() {
                         exportVia: 'vesta'
                     });
                 }
-                
+
                 current = end;
                 if (current >= endDatetime) break;
             }
-            
+
             if (current < endDatetime) {
                 const nextDay = getStartOfNextDay(current);
                 intervals.push({ isDayStart: true, dayDate: new Date(nextDay) });
                 current = nextDay;
             }
         }
-        
+
         displayResults(startDatetime, endDatetime, intervals);
         persistHistory(true);
         showToast('Интервалы успешно рассчитаны!', 'success');
-        
+
     } catch (error) {
         showToast(`Ошибка расчета: ${error.message}`, 'error');
         console.error('Calculation error:', error);
@@ -1306,7 +1537,7 @@ function calculateIntervals() {
 // ============ ОТОБРАЖЕНИЕ ============
 function displayResults(startDate, endDate, intervals) {
     currentIntervals = [...intervals];
-    
+
     const allNonDayIntervals = intervals.filter(i => !i.isDayStart);
     if (allNonDayIntervals.length > 0) {
         const firstInterval = allNonDayIntervals[0].date;
@@ -1315,24 +1546,24 @@ function displayResults(startDate, endDate, intervals) {
         const durationStr = formatDuration(totalDuration);
         const partsCount = allNonDayIntervals.length;
         const partDuration = totalDuration / partsCount;
-        
+
         document.getElementById('duration-info').innerHTML = `
             <p><strong>Общая длительность:</strong> ${durationStr}</p>
             <p><strong>Количество интервалов:</strong> ${partsCount}</p>
             <p><strong>Средняя длительность части:</strong> ${formatDuration(partDuration)}</p>
         `;
     }
-    
+
     const resultsBody = document.getElementById('results-body');
     resultsBody.innerHTML = '';
     let partNumber = 1;
     let previousDay = '';
-    
+
     let groupStartRecorder = null;
     let groupStartCamera = null;
     let previousRecorder = null;
     let previousCamera = null;
-    
+
     const intervalsWithDays = [];
     intervals.forEach((item) => {
         if (item.isDayStart) {
@@ -1347,14 +1578,14 @@ function displayResults(startDate, endDate, intervals) {
             intervalsWithDays.push(item);
         }
     });
-    
+
     intervalsWithDays.forEach((item) => {
         if (item.isDayStart) {
             const row = document.createElement('tr');
             row.className = 'day-start';
             row.innerHTML = `<td colspan="8">${formatDayHeader(item.dayDate)}</td>`;
             resultsBody.appendChild(row);
-            
+
             groupStartRecorder = null;
             groupStartCamera = null;
             previousRecorder = null;
@@ -1362,15 +1593,15 @@ function displayResults(startDate, endDate, intervals) {
         } else {
             item.part = partNumber++;
             const duration = item.endDate - item.date;
-            
+
             const exportVia = item.exportVia || 'vesta';
             const exportIcon = exportVia === 'line' ? 'line.png' : 'vesta.png';
             const exportLabel = exportVia === 'line' ? 'Line' : 'Vesta';
-            
+
             const row = document.createElement('tr');
             const currentRecorder = item.recorder || '';
             const currentCamera = item.camera || '';
-            
+
             if (groupStartRecorder === null) {
                 groupStartRecorder = currentRecorder;
                 groupStartCamera = currentCamera;
@@ -1378,7 +1609,7 @@ function displayResults(startDate, endDate, intervals) {
                 previousCamera = currentCamera;
                 row.className = '';
             } else {
-                const isDifferentFromGroupStart = 
+                const isDifferentFromGroupStart =
                     (currentRecorder !== groupStartRecorder || currentCamera !== groupStartCamera);
                 if (isDifferentFromGroupStart) {
                     groupStartRecorder = currentRecorder;
@@ -1388,10 +1619,10 @@ function displayResults(startDate, endDate, intervals) {
                     row.className = 'interval-custom';
                 }
             }
-            
+
             if (item.isCustom) row.className = 'interval-custom';
             if (item.highlightType) row.classList.add(item.highlightType);
-            
+
             row.innerHTML = `
                 <td class="part-number"><div>${item.part}</div></td>
                 <td>${formatTime(item.date)}</td>
@@ -1427,19 +1658,19 @@ function displayResults(startDate, endDate, intervals) {
                 </td>
             `;
             resultsBody.appendChild(row);
-            
+
             const recorderSelect = row.querySelector('.recorder-select');
             const cameraSelect = row.querySelector('.camera-select');
-            
+
             if (item.recorder) recorderSelect.value = item.recorder;
             if (item.camera) cameraSelect.value = item.camera;
-            
+
             previousRecorder = currentRecorder;
             previousCamera = currentCamera;
-            
+
             const updateHandler = () => {
-                const actualIndex = currentIntervals.findIndex(interval => 
-                    !interval.isDayStart && 
+                const actualIndex = currentIntervals.findIndex(interval =>
+                    !interval.isDayStart &&
                     interval.date.getTime() === item.date.getTime() &&
                     interval.endDate.getTime() === item.endDate.getTime()
                 );
@@ -1450,23 +1681,22 @@ function displayResults(startDate, endDate, intervals) {
                 updateCustomClasses();
                 persistHistory(false);
             };
-            
+
             recorderSelect.addEventListener('change', updateHandler);
             cameraSelect.addEventListener('change', updateHandler);
-            
+
             row.querySelector('.split-btn').addEventListener('click', () => {
-                const actualIndex = currentIntervals.findIndex(interval => 
-                    !interval.isDayStart && 
+                const actualIndex = currentIntervals.findIndex(interval =>
+                    !interval.isDayStart &&
                     interval.date.getTime() === item.date.getTime() &&
                     interval.endDate.getTime() === item.endDate.getTime()
                 );
                 if (actualIndex !== -1) openEditModal(actualIndex);
             });
 
-            // ===== Кнопка "Выгрузка через" =====
             row.querySelector('.export-btn').addEventListener('click', () => {
-                const actualIndex = currentIntervals.findIndex(interval => 
-                    !interval.isDayStart && 
+                const actualIndex = currentIntervals.findIndex(interval =>
+                    !interval.isDayStart &&
                     interval.date.getTime() === item.date.getTime() &&
                     interval.endDate.getTime() === item.endDate.getTime()
                 );
@@ -1486,7 +1716,7 @@ function displayResults(startDate, endDate, intervals) {
             });
         }
     });
-    
+
     document.getElementById('results').style.display = 'block';
     document.getElementById('control-block').style.display = 'block';
 }
@@ -1495,21 +1725,21 @@ function updateCustomClasses() {
     const rows = document.querySelectorAll('#results-body tr:not(.day-start)');
     let groupStartRecorder = null;
     let groupStartCamera = null;
-    
+
     rows.forEach((row, index) => {
         const recorderSelect = row.querySelector('.recorder-select');
         const cameraSelect = row.querySelector('.camera-select');
         const currentRecorder = recorderSelect.value;
         const currentCamera = cameraSelect.value;
-        
+
         if (index === 0) {
             groupStartRecorder = currentRecorder;
             groupStartCamera = currentCamera;
             row.classList.remove('interval-custom');
             return;
         }
-        
-        const isDifferentFromGroupStart = 
+
+        const isDifferentFromGroupStart =
             (currentRecorder !== groupStartRecorder || currentCamera !== groupStartCamera);
         if (isDifferentFromGroupStart) {
             groupStartRecorder = currentRecorder;
@@ -1548,27 +1778,26 @@ function formatDuration(ms) {
 function openEditModal(index) {
     editingIndex = index;
     const interval = currentIntervals[index];
-    
+
     if (!interval || !interval.date || !interval.endDate) {
         showToast('Ошибка: неверный интервал для редактирования', 'error');
         console.error('Invalid interval for editing:', interval);
         return;
     }
-    
+
     document.getElementById('original-start').value = formatTimeForInput(interval.date);
     document.getElementById('original-end').value = formatTimeForInput(interval.endDate);
     document.getElementById('new-start').value = formatTimeForInput(interval.date);
     document.getElementById('new-end').value = formatTimeForInput(interval.endDate);
-    
+
     currentDate = new Date(interval.date);
     document.getElementById('edit-modal').classList.add('show');
-    
+
     document.getElementById('original-end').addEventListener('input', syncTimes);
     document.getElementById('new-start').addEventListener('input', syncTimes);
     document.getElementById('new-end').addEventListener('input', validateNewEnd);
 }
 
-// Полный формат с секундами
 function formatTimeForInput(date) {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -1576,7 +1805,6 @@ function formatTimeForInput(date) {
     return `${hours}:${minutes}:${seconds}`;
 }
 
-// Нормализация: приводим к HH:MM:SS, НЕ обнуляя секунды
 function normalizeTime(timeStr) {
     if (!timeStr) return timeStr;
     if (/^\d{1,2}:\d{2}$/.test(timeStr)) {
@@ -1593,7 +1821,7 @@ function normalizeTime(timeStr) {
 function syncTimes() {
     const originalEnd = document.getElementById('original-end');
     const newStart = document.getElementById('new-start');
-    
+
     if (this.id === 'original-end') {
         newStart.value = this.value;
     } else if (this.id === 'new-start') {
@@ -1620,17 +1848,17 @@ function applyEdit() {
     const originalEndValue = normalizeTime(document.getElementById('original-end').value);
     const newStartValue = normalizeTime(document.getElementById('new-start').value);
     const newEndValue = normalizeTime(document.getElementById('new-end').value);
-    
+
     if (!originalEndValue || !newStartValue || !newEndValue) {
         showToast('Заполните все поля времени', 'error');
         return;
     }
-    
+
     const fullDate = formatFullDate(currentDate);
     const originalEndTime = new Date(`${fullDate}T${originalEndValue}`);
     const newStartTime = new Date(`${fullDate}T${newStartValue}`);
     const newEndTime = new Date(`${fullDate}T${newEndValue}`);
-    
+
     if (isNaN(originalEndTime.getTime()) || isNaN(newStartTime.getTime()) || isNaN(newEndTime.getTime())) {
         showToast('Ошибка: неверный формат времени', 'error');
         return;
@@ -1639,23 +1867,23 @@ function applyEdit() {
         showToast('Время начала должно быть раньше времени окончания', 'error');
         return;
     }
-    
+
     const originalInterval = currentIntervals[editingIndex];
     const originalStart = originalInterval.date;
     const originalEnd = originalInterval.endDate;
     const originalRecorder = originalInterval.recorder || '';
     const originalCamera = originalInterval.camera || '';
     const originalExportVia = originalInterval.exportVia || 'vesta';
-    
-    if (originalEndTime < originalStart || originalEndTime > originalEnd || 
-        newStartTime < originalStart || newStartTime > originalEnd || 
+
+    if (originalEndTime < originalStart || originalEndTime > originalEnd ||
+        newStartTime < originalStart || newStartTime > originalEnd ||
         newEndTime < originalStart || newEndTime > originalEnd) {
         showToast('Новый интервал должен находиться внутри исходного', 'error');
         return;
     }
-    
+
     const newIntervals = [];
-    
+
     if (originalStart < originalEndTime && (originalEndTime - originalStart) > 0) {
         newIntervals.push({
             part: 0, date: new Date(originalStart), endDate: new Date(originalEndTime),
@@ -1664,14 +1892,14 @@ function applyEdit() {
             highlightType: 'highlight-original'
         });
     }
-    
+
     newIntervals.push({
         part: 0, date: new Date(newStartTime), endDate: new Date(newEndTime),
         isDayStart: false, recorder: originalRecorder, camera: originalCamera,
         exportVia: originalExportVia,
         highlightType: 'highlight-new'
     });
-    
+
     if (newEndTime < originalEnd && (originalEnd - newEndTime) > 0) {
         newIntervals.push({
             part: 0, date: new Date(newEndTime), endDate: new Date(originalEnd),
@@ -1680,12 +1908,12 @@ function applyEdit() {
             highlightType: 'highlight-original'
         });
     }
-    
+
     currentIntervals.splice(editingIndex, 1, ...newIntervals);
     displayResultsAfterEdit();
     closeEditModal();
     showToast('Интервал успешно разделен!', 'success');
-    
+
     setTimeout(() => {
         currentIntervals.forEach(item => { if (item.highlightType) delete item.highlightType; });
         displayResultsAfterEdit();
@@ -1721,11 +1949,11 @@ function openAddModal() {
     const today = document.getElementById('start-date').value;
     document.getElementById('add-start-date').value = today;
     document.getElementById('add-end-date').value = today;
-    
+
     document.getElementById('add-start-date').addEventListener("change", () => {
         document.getElementById('add-end-date').value = document.getElementById('add-start-date').value;
     });
-    
+
     document.getElementById('add-modal').classList.add('show');
 }
 
@@ -1739,43 +1967,43 @@ function applyAddInterval() {
     const endDate = document.getElementById('add-end-date').value;
     const endTime = document.getElementById('add-end-time').value;
     const maxIntervalHours = parseInt(document.getElementById('max-interval').value);
-    
+
     if (!startDate || !startTime || !endDate || !endTime) {
         showToast('Заполните все поля даты и времени', 'error');
         return;
     }
-    
+
     const startDatetime = roundToSecond(new Date(`${startDate}T${startTime}`));
     const endDatetime = roundToSecond(new Date(`${endDate}T${endTime}`));
-    
+
     if (endDatetime <= startDatetime) {
         showToast('Дата окончания должна быть после даты начала', 'error');
         return;
     }
-    
+
     const maxIntervalSeconds = maxIntervalHours * 3600;
     const newIntervals = [];
     let current = new Date(startDatetime);
-    
+
     const allIntervals = currentIntervals.filter(i => !i.isDayStart);
     const lastInterval = allIntervals[allIntervals.length - 1];
     const shouldInheritCustomClass = lastInterval && lastInterval.isCustom;
     const inheritedExportVia = lastInterval && lastInterval.exportVia ? lastInterval.exportVia : 'vesta';
-    
+
     while (current < endDatetime) {
         const endOfDay = getEndOfDay(current);
         const dayEnd = endOfDay < endDatetime ? endOfDay : endDatetime;
         const remainingDayTime = dayEnd - current;
-        
+
         if (remainingDayTime <= 0) {
             current = getStartOfNextDay(current);
             continue;
         }
-        
+
         const remainingSeconds = Math.floor(remainingDayTime / 1000);
         const intervalsInDay = Math.max(1, Math.ceil(remainingSeconds / maxIntervalSeconds));
         const baseSeconds = Math.floor(remainingSeconds / intervalsInDay);
-        
+
         for (let i = 0; i < intervalsInDay; i++) {
             const isLastInDay = (i === intervalsInDay - 1);
             let end;
@@ -1785,7 +2013,7 @@ function applyAddInterval() {
                 end = new Date(current.getTime() + baseSeconds * 1000);
             }
             end = roundToSecond(end);
-            
+
             if (end - current > 0) {
                 newIntervals.push({
                     part: 0, date: new Date(current), endDate: new Date(end),
@@ -1795,27 +2023,27 @@ function applyAddInterval() {
                     customIndex: customIntervalsCount++
                 });
             }
-            
+
             current = end;
             if (current >= endDatetime) break;
         }
-        
+
         if (current < endDatetime) {
             current = getStartOfNextDay(current);
         }
     }
-    
+
     currentIntervals.push(...newIntervals);
-    
+
     const allDates = currentIntervals
         .filter(i => !i.isDayStart)
         .flatMap(i => [i.date, i.endDate]);
-    
+
     if (allDates.length > 0) {
         globalStartDate = new Date(Math.min(...allDates));
         globalEndDate = new Date(Math.max(...allDates));
     }
-    
+
     displayResults(globalStartDate, globalEndDate, currentIntervals);
     persistHistory(false);
     closeAddModal();
@@ -1823,7 +2051,6 @@ function applyAddInterval() {
 }
 
 // ============ КЛЮЧИ ТАЙМИНГОВ (ТОКЕНЫ) ============
-// UTF-8 <-> hex, работает с кириллицей и любыми юникод-символами
 function stringToHex(str) {
     const bytes = new TextEncoder().encode(str);
     return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -1850,10 +2077,10 @@ function copyTimingKey() {
             endTime: document.getElementById('end-time').value,
             maxInterval: document.getElementById('max-interval').value
         };
-        
+
         const jsonString = JSON.stringify(data);
         const hexKey = stringToHex(jsonString);
-        
+
         navigator.clipboard.writeText(hexKey).then(() => {
             showToast('Ключ таймингов скопирован!', 'success');
         }).catch(err => {
@@ -1874,7 +2101,7 @@ function pasteTimingKey() {
         const jsonString = hexToString(key.trim());
         const data = JSON.parse(jsonString);
         applyTimingData(data);
-        currentHistoryId = null; 
+        currentHistoryId = null;
         persistHistory(true);
         showToast('Ключ таймингов успешно применен!', 'success');
     } catch (error) {
@@ -1892,7 +2119,7 @@ function applyTimingData(data) {
     document.getElementById('end-date').value = data.endDate || '';
     document.getElementById('end-time').value = data.endTime || '';
     document.getElementById('max-interval').value = data.maxInterval || 4;
-    
+
     if (data.intervals && Array.isArray(data.intervals)) {
         currentIntervals = data.intervals.map(interval => ({
             ...interval,
@@ -1904,23 +2131,22 @@ function applyTimingData(data) {
             exportVia: interval.exportVia || 'vesta',
             isCustom: interval.isCustom || false
         }));
-        
+
         const allDates = currentIntervals
             .filter(i => !i.isDayStart)
             .flatMap(i => [i.date, i.endDate]);
-        
+
         if (allDates.length > 0) {
             globalStartDate = new Date(Math.min(...allDates));
             globalEndDate = new Date(Math.max(...allDates));
         }
-        
+
         displayResults(globalStartDate, globalEndDate, currentIntervals);
     }
 }
 
 /* ================================================================
-   ИСТОРИЯ ВЫГРУЗОК (в localStorage хранится тот же hex-ключ,
-   что и у кнопки «Копировать ключ таймингов»)
+   ИСТОРИЯ ВЫГРУЗОК
    ================================================================ */
 const HISTORY_KEY   = 'intervalSplitterHistory_v2';
 const HISTORY_LIMIT = 10;
@@ -1962,7 +2188,6 @@ function setHistory(arr) {
     }
 }
 
-/** Собирает текущее состояние приложения (то же, что уходит в ключ). */
 function collectTimingData() {
     return {
         intervals:   currentIntervals,
@@ -1975,13 +2200,11 @@ function collectTimingData() {
     };
 }
 
-/** Строит hex-ключ ровно так же, как copyTimingKey(). */
 function buildTimingKey() {
     const json = JSON.stringify(collectTimingData());
     return stringToHex(json);
 }
 
-/** Создаёт объект новой записи истории. */
 function makeHistoryEntry(key) {
     return {
         id:         'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
@@ -1993,22 +2216,15 @@ function makeHistoryEntry(key) {
     };
 }
 
-/**
- * Сохраняет текущее состояние.
- * @param {boolean} asNew — true: попытаться создать новую запись (с проверкой дубликата),
- *                          false: обновить текущую запись.
- */
 function persistHistory(asNew = false) {
     if (!currentIntervals || currentIntervals.length === 0) return;
 
     const key = buildTimingKey();
     let   history = getHistory();
 
-    // ---- 1. Новая запись: сначала ищем дубликат по ключу ----
     if (asNew) {
         const dupIdx = history.findIndex(h => h.key === key);
         if (dupIdx !== -1) {
-            // Дубликат найден — обновляем метаданные и переносим вверх
             const [entry] = history.splice(dupIdx, 1);
             entry.orderTitle = document.getElementById('orderTitle').value || 'Без номера';
             entry.startDate  = document.getElementById('start-date').value;
@@ -2022,23 +2238,19 @@ function persistHistory(asNew = false) {
             history.unshift(entry);
         }
     }
-    // ---- 2. Обновление текущей записи ----
     else {
         let idx = currentHistoryId
             ? history.findIndex(h => h.id === currentHistoryId)
             : -1;
 
-        // Если записи нет (была удалена или ещё не создана) — создаём
         if (idx === -1) {
             const entry = makeHistoryEntry(key);
             currentHistoryId = entry.id;
             history.unshift(entry);
         } else {
-            // Проверяем, не совпало ли новое состояние с какой-то ДРУГОЙ записью
             const dupIdx = history.findIndex((h, i) => i !== idx && h.key === key);
 
             if (dupIdx !== -1) {
-                // Совпало — удаляем текущую, активируем дубликат и поднимаем его вверх
                 const dupId = history[dupIdx].id;
                 history.splice(idx, 1);
 
@@ -2049,7 +2261,6 @@ function persistHistory(asNew = false) {
                 history.unshift(dupEntry);
                 currentHistoryId = dupEntry.id;
             } else {
-                // Просто обновляем текущую
                 history[idx].key        = key;
                 history[idx].orderTitle = document.getElementById('orderTitle').value || 'Без номера';
                 history[idx].startDate  = document.getElementById('start-date').value;
@@ -2112,7 +2323,6 @@ function renderHistory() {
     });
 }
 
-/** Загружает запись: декодирует ключ и применяет его как при «Вставить ключ». */
 function loadHistoryEntry(id) {
     const entry = getHistory().find(h => h.id === id);
     if (!entry) {
@@ -2150,21 +2360,19 @@ document.getElementById('history-clear').addEventListener('click', () => {
 });
 
 /* ================================================================
-   ДИНАМИЧЕСКАЯ ИКОНКА САЙТА (градиент на icon.svg)
+   ДИНАМИЧЕСКАЯ ИКОНКА САЙТА
    ================================================================ */
-const FALLBACK_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<path fill="black" fill-rule="evenodd" d="M256 24C127.9 24 24 127.9 24 256s103.9 232 232 232 232-103.9 232-232S384.1 24 256 24zm0 56c97.2 0 176 78.8 176 176s-78.8 176-176 176S80 353.2 80 256 158.8 80 256 80z"/>
-<path fill="black" d="M243 118h26v146h-26z"/>
-<path fill="black" d="M256 238l106 62-13 22-106-62z"/>
-</svg>`;
+const FALLBACK_ICON_SVG = `<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
+    <path d="M336 64h-80c0-35.3-28.7-64-64-64s-64 28.7-64 64H48C21.5 64 0 85.5 0 112v352c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48zM96 424c-13.3 0-24-10.7-24-24s10.7-24 24-24 24 10.7 24 24-10.7 24-24 24zm0-96c-13.3 0-24-10.7-24-24s10.7-24 24-24 24 10.7 24 24-10.7 24-24 24zm0-96c-13.3 0-24-10.7-24-24s10.7-24 24-24 24 10.7 24 24-10.7 24-24 24zm96-192c13.3 0 24 10.7 24 24s-10.7 24-24 24-24-10.7-24-24 10.7-24 24-24zm128 368c0 4.4-3.6 8-8 8H168c-4.4 0-8-3.6-8-8v-16c0-4.4 3.6-8 8-8h144c4.4 0 8 3.6 8 8v16zm0-96c0 4.4-3.6 8-8 8H168c-4.4 0-8-3.6-8-8v-16c0-4.4 3.6-8 8-8h144c4.4 0 8 3.6 8 8v16zm0-96c0 4.4-3.6 8-8 8H168c-4.4 0-8-3.6-8-8v-16c0-4.4 3.6-8 8-8h144c4.4 0 8 3.6 8 8v16z"/>
+</svg>
+`;
 
 function randomGradientColors() {
     const hue1  = Math.random() * 360;
-    // Аналоговая схема: второй оттенок сдвинут на 25–80° — цвета «дружат» между собой
     const hue2  = (hue1 + 25 + Math.random() * 55) % 360;
-    const sat   = 68 + Math.random() * 27;   // 68–95%
-    const light1 = 50 + Math.random() * 10;  // 50–60%
-    const light2 = 54 + Math.random() * 10;  // 54–64%
+    const sat   = 68 + Math.random() * 27;
+    const light1 = 50 + Math.random() * 10;
+    const light2 = 54 + Math.random() * 10;
     return {
         c1: `hsl(${hue1.toFixed(1)}, ${sat.toFixed(1)}%, ${light1.toFixed(1)}%)`,
         c2: `hsl(${hue2.toFixed(1)}, ${sat.toFixed(1)}%, ${light2.toFixed(1)}%)`
@@ -2193,7 +2401,6 @@ function applyGradientToSvg(svg, c1, c2, angle) {
 
     let out = svg.replace(openTag, openTag + defs);
 
-    // Явные чёрные заливки / обводки → градиент
     const blackFill      = /fill\s*=\s*(["'])\s*(#000000|#000|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))\s*\1/gi;
     const blackStroke    = /stroke\s*=\s*(["'])\s*(#000000|#000|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))\s*\1/gi;
     const blackFillCss   = /fill\s*:\s*(#000000|#000|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))/gi;
@@ -2204,7 +2411,6 @@ function applyGradientToSvg(svg, c1, c2, angle) {
     out = out.replace(blackFillCss,   `fill:url(#${gid})`);
     out = out.replace(blackStrokeCss, `stroke:url(#${gid})`);
 
-    // Корневой fill — элементы без явного fill тоже получат градиент
     if (/\sfill\s*=/i.test(openTag)) {
         const newOpen = openTag.replace(/\sfill\s*=\s*(["'])[^"']*\1/i, ` fill="url(#${gid})"`);
         out = out.replace(openTag, newOpen);
@@ -2249,7 +2455,6 @@ async function generateFavicon() {
         console.error('Favicon generation error:', e);
     }
 }
-
     </script>
 </body>
 </html>
