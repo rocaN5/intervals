@@ -994,23 +994,27 @@
 
         .hc-date {
             font-size: .72rem;
-            color: #9d9d9d;
+            color: #ffffff;
             display: flex;
             align-items: center;
             gap: 5px;
             line-height: 1;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            text-shadow: 0px 0px 10px #000;
         }
         .hc-date i { color: hsl(var(--hue), 90%, 62%); font-size: .72rem; }
 
         .hc-range {
             font-size: .68rem;
-            color: #7b7b7b;
+            color: #d7d7d7;
             white-space: nowrap;
-            overflow: hidden;
             text-overflow: ellipsis;
             letter-spacing: .2px;
             line-height: 1;
+            text-shadow: 0px 0px 10px #000;
         }
+        .hc-range  i { color: hsl(var(--hue), 90%, 62%); font-size: .72rem; }
 
         .hc-timeline {
             margin-top: auto;
@@ -2424,12 +2428,14 @@ function buildTimingKey() {
 }
 
 function makeHistoryEntry(key) {
+    const now = new Date().toISOString();
     return {
         id:         'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
         orderTitle: document.getElementById('orderTitle').value || 'Без номера',
         startDate:  document.getElementById('start-date').value,
         endDate:    document.getElementById('end-date').value,
-        createdAt:  new Date().toISOString(),
+        createdAt:  now,
+        updatedAt:  now,        // ← новое
         key
     };
 }
@@ -2439,6 +2445,7 @@ function persistHistory(asNew = false) {
 
     const key = buildTimingKey();
     let   history = getHistory();
+    const now = new Date().toISOString();
 
     if (asNew) {
         const dupIdx = history.findIndex(h => h.key === key);
@@ -2447,7 +2454,8 @@ function persistHistory(asNew = false) {
             entry.orderTitle = document.getElementById('orderTitle').value || 'Без номера';
             entry.startDate  = document.getElementById('start-date').value;
             entry.endDate    = document.getElementById('end-date').value;
-            entry.createdAt  = new Date().toISOString();
+            entry.createdAt  = now;
+            entry.updatedAt  = now;
             history.unshift(entry);
             currentHistoryId = entry.id;
         } else {
@@ -2475,7 +2483,8 @@ function persistHistory(asNew = false) {
                 const dupNewIdx = history.findIndex(h => h.id === dupId);
                 const [dupEntry] = history.splice(dupNewIdx, 1);
                 dupEntry.orderTitle = document.getElementById('orderTitle').value || 'Без номера';
-                dupEntry.createdAt  = new Date().toISOString();
+                dupEntry.createdAt  = now;
+                dupEntry.updatedAt  = now;
                 history.unshift(dupEntry);
                 currentHistoryId = dupEntry.id;
             } else {
@@ -2483,6 +2492,7 @@ function persistHistory(asNew = false) {
                 history[idx].orderTitle = document.getElementById('orderTitle').value || 'Без номера';
                 history[idx].startDate  = document.getElementById('start-date').value;
                 history[idx].endDate    = document.getElementById('end-date').value;
+                history[idx].updatedAt  = now;
             }
         }
     }
@@ -2526,18 +2536,67 @@ function formatShortDuration(ms) {
     return h > 0 ? `${h}ч ${pad2(m)}м` : `${m}м`;
 }
 
+function plural(n, one, few, many) {
+    const n10  = n % 10;
+    const n100 = n % 100;
+    if (n10 === 1 && n100 !== 11) return one;
+    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return few;
+    return many;
+}
+
+function timeAgo(iso) {
+    if (!iso) return '—';
+    const then = new Date(iso);
+    if (isNaN(then.getTime())) return '—';
+
+    const diffMs = Date.now() - then.getTime();
+    if (diffMs < 0) return 'только что';
+
+    const totalMin = Math.floor(diffMs / 60000);
+    const totalHr  = Math.floor(totalMin / 60);
+    const totalDay = Math.floor(totalHr / 24);
+
+    if (totalDay > 0) {
+        const h = totalHr % 24;
+        return `${totalDay} ${plural(totalDay, 'день',  'дня',  'дней')} и ${h} ${plural(h, 'час', 'часа', 'часов')} назад`;
+    }
+    if (totalHr > 0) {
+        const m = totalMin % 60;
+        return `${totalHr} ${plural(totalHr, 'час', 'часа', 'часов')} и ${m} ${plural(m, 'минуту', 'минуты', 'минут')} назад`;
+    }
+    if (totalMin > 0) {
+        return `${totalMin} ${plural(totalMin, 'минуту', 'минуты', 'минут')} назад`;
+    }
+    return 'только что';
+}
+
 function timeShort(d) {
     const dt = new Date(d);
     if (isNaN(dt)) return '--:--';
     return `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
 }
 
+/* ─── Цвет сегмента = цвет календарного дня ─── */
+const GOLDEN_ANGLE = 137.508;   // максимально разносит оттенки соседних дней
+
+function dayIndexFromDate(date) {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
+    // используем локальные компоненты → индекс суток, стабильный между запусками
+    return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+}
+
+function dayHue(date) {
+    const idx = dayIndexFromDate(date);
+    if (idx === null) return null;
+    const h = (idx * GOLDEN_ANGLE) % 360;
+    return h < 0 ? h + 360 : h;
+}
+
 function segColor(interval) {
-    const rec = interval.recorder || '';
-    const cam = interval.camera || '';
-    if (!rec && !cam) return 'rgba(255, 255, 255, 0.16)';
-    const hue = hashString(rec + '|' + cam) % 360;
-    return `hsl(${hue}, 82%, 58%)`;
+    const hue = dayHue(interval.date);
+    if (hue === null) return 'rgba(255, 255, 255, 0.16)';
+    return `hsl(${hue.toFixed(1)}, 82%, 58%)`;
 }
 
 function buildTimelineHtml(intervals) {
@@ -2717,9 +2776,27 @@ function renderHistory() {
     history.forEach((entry, idx) => {
         const hue = 45 + (hashString(entry.id) % 55);   // 45..99 — в гамме сайта
 
+        // --- сначала считаем все производные данные ---
+        const intervals = parseEntryIntervals(entry);
+        const totalMs = intervals.reduce(
+            (s, i) => s + Math.max(0, new Date(i.endDate) - new Date(i.date)), 0
+        );
+
+        const updatedIso  = entry.updatedAt || entry.createdAt || '';
+        const updated     = updatedIso ? new Date(updatedIso) : null;
+        const updatedFull = (updated && !isNaN(updated))
+            ? `${pad2(updated.getDate())}.${pad2(updated.getMonth() + 1)}.${updated.getFullYear()} ${pad2(updated.getHours())}:${pad2(updated.getMinutes())}`
+            : '';
+
+        const rangeStr = entry.startDate
+            ? `${formatDateShort(entry.startDate)} → ${formatDateShort(entry.endDate)}`
+            : '';
+
+        // --- теперь создаём карточку ---
         const card = document.createElement('div');
         card.className = 'history-card' + (entry.id === currentHistoryId ? ' active' : '');
         card.dataset.id = entry.id;
+        card.dataset.updated = updatedIso;           // ← теперь updatedIso уже объявлен
         card.style.setProperty('--hue', String(hue));
         if (historyAnimationsEnabled) {
             card.style.animationDelay = (idx * 50) + 'ms';
@@ -2727,28 +2804,20 @@ function renderHistory() {
             card.style.animation = 'none';
         }
 
-        const intervals = parseEntryIntervals(entry);
-        const totalMs = intervals.reduce(
-            (s, i) => s + Math.max(0, new Date(i.endDate) - new Date(i.date)), 0
-        );
-
-        const created = entry.createdAt ? new Date(entry.createdAt) : null;
-        const createdStr = (created && !isNaN(created))
-            ? `${pad2(created.getDate())}.${pad2(created.getMonth() + 1)}.${created.getFullYear()} ${pad2(created.getHours())}:${pad2(created.getMinutes())}`
-            : '';
-
-        const rangeStr = entry.startDate
-            ? `${formatDateShort(entry.startDate)} → ${formatDateShort(entry.endDate)}`
-            : '';
-
         card.innerHTML = `
             <canvas class="hc-canvas"></canvas>
             <div class="hc-veil"></div>
             <button class="hc-del" title="Удалить"><i class="fas fa-times"></i></button>
             <div class="hc-inner">
                 <div class="hc-order">${escapeHtml(entry.orderTitle || 'Без номера')}</div>
-                <div class="hc-date"><i class="far fa-clock"></i>${createdStr || '—'}</div>
-                ${rangeStr ? `<div class="hc-range">${rangeStr}</div>` : ''}
+                <div class="hc-date" title="${updatedFull}">
+                    <i class="far fa-clock"></i>
+                    <span class="hc-ago">${timeAgo(updatedIso)}</span>
+                </div>
+                ${rangeStr ? `<div class="hc-range">
+                    <i class="fa-solid fa-chart-column"></i>
+                    ${rangeStr}
+                </div>` : ''}
                 <div class="hc-timeline">${buildTimelineHtml(intervals)}</div>
                 <div class="hc-stats">
                     <span><b>${intervals.length}</b> частей</span>
@@ -2783,6 +2852,15 @@ function renderHistory() {
         setTimeout(() => { historyAnimationsEnabled = false; }, 800);
     }
 }
+function refreshHistoryTimes() {
+    document.querySelectorAll('.history-card').forEach(card => {
+        const iso = card.dataset.updated;
+        if (!iso) return;
+        const el = card.querySelector('.hc-ago');
+        if (el) el.textContent = timeAgo(iso);
+    });
+}
+setInterval(refreshHistoryTimes, 30_000);   // раз в 30 сек
 
 /* ---------------- Resize: пересчёт canvas ---------------- */
 let historyResizeTimer = null;
